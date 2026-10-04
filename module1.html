@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 1: Phishing & Social Engineering | CyberSA Learn</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0F1923;
+    --panel:    #162232;
+    --panel2:   #1C2D42;
+    --border:   #243548;
+    --cyan:     #00C2CB;
+    --cyan-dim: #007A82;
+    --gold:     #F5A623;
+    --red:      #E05252;
+    --green:    #3DB88A;
+    --text:     #E4EBF2;
+    --muted:    #7A95B0;
+    --white:    #FFFFFF;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* TOP BAR */
+  .topbar { background: var(--panel); border-bottom: 1px solid var(--border); padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .topbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .topbar-brand .logo { width: 32px; height: 32px; background: var(--cyan); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--bg); }
+  .topbar-brand .name { font-weight: 700; font-size: 16px; color: var(--white); }
+  .topbar-brand .sub { font-size: 11px; color: var(--muted); margin-left: 4px; }
+  .topbar-right { display: flex; align-items: center; gap: 16px; font-size: 13px; color: var(--muted); }
+  .topbar-right .student { color: var(--cyan); font-weight: 500; }
+
+  /* LAYOUT */
+  .layout { display: flex; flex: 1; }
+
+  /* SIDEBAR */
+  .sidebar { width: 260px; min-width: 260px; background: var(--panel); border-right: 1px solid var(--border); padding: 24px 0; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto; }
+  .sidebar-section { padding: 0 20px 16px; }
+  .sidebar-label { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+  .sidebar-module { display: block; padding: 10px 14px; border-radius: 8px; text-decoration: none; font-size: 13px; color: var(--muted); margin-bottom: 2px; transition: background 0.15s; }
+  .sidebar-module:hover { background: var(--panel2); color: var(--text); }
+  .sidebar-module.active { background: rgba(0,194,203,0.12); color: var(--cyan); font-weight: 500; border-left: 3px solid var(--cyan); }
+  .sidebar-module .mod-num { font-size: 10px; display: block; margin-bottom: 2px; }
+  .sidebar-divider { border: none; border-top: 1px solid var(--border); margin: 12px 20px; }
+
+  /* Topics nav */
+  .topics-nav { padding: 0 20px; }
+  .topic-link { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; text-decoration: none; font-size: 12.5px; color: var(--muted); margin-bottom: 2px; }
+  .topic-link:hover { background: var(--panel2); color: var(--text); }
+  .topic-link.done .dot { background: var(--green); }
+  .topic-link.active { color: var(--cyan); }
+  .topic-link.active .dot { background: var(--cyan); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+
+  /* MAIN */
+  .main { flex: 1; padding: 32px 40px; max-width: 860px; }
+
+  /* MODULE HEADER */
+  .module-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,194,203,0.12); color: var(--cyan); border: 1px solid var(--cyan-dim); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; margin-bottom: 16px; }
+  .module-title { font-size: 28px; font-weight: 700; color: var(--white); line-height: 1.3; margin-bottom: 10px; }
+  .module-meta { display: flex; gap: 20px; font-size: 13px; color: var(--muted); margin-bottom: 24px; flex-wrap: wrap; }
+  .module-meta span { display: flex; align-items: center; gap: 5px; }
+
+  /* PROGRESS */
+  .progress-wrap { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 32px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--green)); border-radius: 3px; transition: width 0.4s; }
+
+  /* SECTIONS */
+  .section { margin-bottom: 40px; }
+  .section-tag { font-size: 11px; font-weight: 600; color: var(--cyan); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+  .section-title { font-size: 20px; font-weight: 700; color: var(--white); margin-bottom: 14px; }
+  .section p { font-size: 14.5px; line-height: 1.75; color: var(--text); margin-bottom: 14px; max-width: 72ch; }
+
+  /* HIGHLIGHT BOX */
+  .highlight { background: var(--panel2); border: 1px solid var(--border); border-left: 4px solid var(--cyan); border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+  .highlight.warning { border-left-color: var(--gold); }
+  .highlight.danger  { border-left-color: var(--red); }
+  .highlight.success { border-left-color: var(--green); }
+  .highlight-title { font-size: 12px; font-weight: 600; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .highlight.warning .highlight-title { color: var(--gold); }
+  .highlight.danger  .highlight-title { color: var(--red); }
+  .highlight.success .highlight-title { color: var(--green); }
+  .highlight p { font-size: 14px; color: var(--text); margin: 0; max-width: 100%; }
+
+  /* LIST */
+  .check-list { list-style: none; margin: 12px 0; }
+  .check-list li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--text); margin-bottom: 8px; line-height: 1.6; }
+  .check-list li::before { content: ""; width: 18px; height: 18px; min-width: 18px; background: rgba(0,194,203,0.15); border: 1px solid var(--cyan-dim); border-radius: 4px; margin-top: 2px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='%2300C2CB' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: center; }
+
+  /* EXAMPLE CARD */
+  .example-card { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 20px 0; }
+  .example-card .ex-label { font-size: 11px; font-weight: 600; color: var(--gold); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .example-card .ex-title { font-size: 15px; font-weight: 600; color: var(--white); margin-bottom: 10px; }
+  .example-card p { font-size: 14px; color: var(--text); margin-bottom: 8px; }
+
+  /* PHISHING EXAMPLE - looks like a real SMS/email */
+  .fake-message { background: #1A2D1A; border: 1px solid #2D5C2D; border-radius: 10px; padding: 16px 18px; margin: 12px 0; font-family: monospace; font-size: 13px; color: #A8D5A8; }
+  .fake-message .sender { font-size: 11px; color: #6B9B6B; margin-bottom: 6px; }
+  .real-message { background: #1A1A2D; border: 1px solid #2D2D5C; border-radius: 10px; padding: 16px 18px; margin: 12px 0; font-family: monospace; font-size: 13px; color: #A8A8D5; }
+  .real-message .sender { font-size: 11px; color: #6B6B9B; margin-bottom: 6px; }
+
+  /* RED FLAGS */
+  .red-flag { display: flex; align-items: flex-start; gap: 10px; background: rgba(224,82,82,0.08); border: 1px solid rgba(224,82,82,0.25); border-radius: 8px; padding: 12px 14px; margin: 6px 0; font-size: 13.5px; color: var(--text); }
+  .red-flag::before { content: "⚠"; font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+  /* QUIZ */
+  .quiz-box { background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 28px 0; }
+  .quiz-title { font-size: 16px; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+  .quiz-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .quiz-q { margin-bottom: 22px; }
+  .quiz-q .q-text { font-size: 14.5px; font-weight: 500; color: var(--text); margin-bottom: 12px; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .option { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 14px; color: var(--text); transition: all 0.15s; user-select: none; }
+  .option:hover { border-color: var(--cyan-dim); background: rgba(0,194,203,0.05); }
+  .option.correct { border-color: var(--green); background: rgba(61,184,138,0.08); color: var(--green); }
+  .option.wrong { border-color: var(--red); background: rgba(224,82,82,0.08); color: var(--red); }
+  .option input[type=radio] { accent-color: var(--cyan); width: 16px; height: 16px; }
+  .quiz-btn { margin-top: 16px; padding: 10px 24px; background: var(--cyan); color: var(--bg); border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .quiz-btn:hover { opacity: 0.9; }
+  .quiz-result { margin-top: 14px; padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; display: none; }
+  .quiz-result.show { display: block; }
+  .quiz-result.pass { background: rgba(61,184,138,0.12); border: 1px solid var(--green); color: var(--green); }
+  .quiz-result.fail { background: rgba(224,82,82,0.1); border: 1px solid var(--red); color: var(--red); }
+
+  /* NEXT BUTTON */
+  .nav-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .nav-btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.15s; }
+  .nav-btn.primary { background: var(--cyan); color: var(--bg); }
+  .nav-btn.primary:hover { opacity: 0.9; }
+  .nav-btn.secondary { background: var(--panel2); border: 1px solid var(--border); color: var(--text); }
+  .nav-btn.secondary:hover { border-color: var(--cyan-dim); }
+
+  /* STEP INDICATOR */
+  .steps { display: flex; gap: 8px; margin-bottom: 32px; flex-wrap: wrap; }
+  .step { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .step.active { color: var(--cyan); }
+  .step.done { color: var(--green); }
+  .step-num { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid currentColor; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+  .step-divider { width: 20px; height: 1px; background: var(--border); }
+
+  @media (max-width: 768px) { .sidebar { display: none; } .main { padding: 20px 18px; } }
+
+/* CyberSA clean research theme */
+:root{--bg:#ffffff;--panel:#ffffff;--panel2:#FAF9FB;--border:#E4E2EE;--cyan:#4C5FD5;--cyan-dim:#C8C5E8;--gold:#FF8C42;--red:#D95C5C;--green:#2E9B6F;--text:#22213A;--muted:#6B6B85;--white:#22213A}
+body{background:#fff;color:#22213A}.topbar{background:#fff;border-bottom:1px solid #E4E2EE}.topbar-brand .logo{background:#4C5FD5;color:#fff}.topbar-brand .name,.module-title,.section-title,.quiz-title,.example-card .ex-title{color:#22213A}.topbar-brand .sub,.topbar-right,.module-meta,.section p,.check-list li,.highlight p,.example-card p{color:#6B6B85}.topbar-right .student{color:#4C5FD5}.sidebar{background:#FAF9FB;border-right:1px solid #E4E2EE}.sidebar-module:hover,.topic-link:hover{background:#EDEAFB;color:#22213A}.sidebar-module.active{background:#EDEAFB;color:#4C5FD5;border-left-color:#4C5FD5}.topic-link.active{color:#4C5FD5}.dot{background:#D9D7E4}.module-badge{background:#EDEAFB;color:#4C5FD5;border-color:#D8D4F0}.progress-wrap,.example-card,.quiz-box,.highlight,.nav-btn.secondary{background:#FAF9FB;border-color:#E4E2EE}.progress-bar{background:#E4E2EE}.progress-fill{background:#4C5FD5}.section-tag,.highlight-title{color:#4C5FD5}.highlight.warning .highlight-title{color:#FF8C42}.highlight.danger .highlight-title{color:#D95C5C}.highlight.success .highlight-title{color:#2E9B6F}.option{background:#fff;border-color:#E4E2EE;color:#22213A}.option:hover{border-color:#C8C5E8;background:#FAF9FB}.quiz-btn,.nav-btn.primary{background:#4C5FD5;color:#fff}.nav-btn.secondary{color:#22213A}.step.active{color:#4C5FD5}.step-divider{background:#E4E2EE}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <a class="topbar-brand" href="index.html">
+    <div class="logo">CS</div>
+    <span class="name">CyberSA Learn</span>
+    <span class="sub">| UP COS700</span>
+  </a>
+  <div class="topbar-right">
+    <span></span>
+    <span class="student"></span>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Modules</div>
+      <a class="sidebar-module active" href="module1.html">
+        <span class="mod-num">Module 1</span>
+        Phishing &amp; Social Engineering
+      </a>
+      <a class="sidebar-module" href="module2.html">
+        <span class="mod-num">Module 2</span>
+        Cybercrimes Act &amp; POPIA
+      </a>
+      <a class="sidebar-module" href="module3.html">
+        <span class="mod-num">Module 3</span>
+        Password Security &amp; Auth
+      </a>
+      <a class="sidebar-module" href="module4.html">
+        <span class="mod-num">Module 4</span>
+        Safe Internet &amp; Social Media
+      </a>
+      <a class="sidebar-module" href="module5.html">
+        <span class="mod-num">Module 5</span>
+        Cyber Attack Awareness
+      </a>
+    </div>
+    <hr class="sidebar-divider">
+    <div class="sidebar-section">
+      <div class="sidebar-label">This Module</div>
+    </div>
+    <div class="topics-nav">
+      <a class="topic-link done" href="#intro"><div class="dot"></div>Introduction</a>
+      <a class="topic-link done" href="#what-is"><div class="dot"></div>What is Phishing?</a>
+      <a class="topic-link active" href="#recognise"><div class="dot"></div>Recognising Attacks</a>
+      <a class="topic-link" href="#sa-threats"><div class="dot"></div>SA-Specific Threats</a>
+      <a class="topic-link" href="#respond"><div class="dot"></div>Responding &amp; Reporting</a>
+      <a class="topic-link" href="#quiz"><div class="dot"></div>Knowledge Check</a>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <div class="module-badge">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M6 4v4M4 6h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Module 1 of 5
+    </div>
+
+    <h1 class="module-title">Phishing &amp; Social Engineering</h1>
+
+    <div class="module-meta">
+      <span>⏱ 3-4 hours</span>
+      <span>📚 Beginner</span>
+      <span>🎯 SA Context</span>
+      <span>📋 10 Assessment Questions</span>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Assessment Score</span><span>Not assessed</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+    </div>
+
+    <!-- TOPIC 1: INTRO -->
+    <section class="section" id="intro">
+      <div class="section-tag">Introduction</div>
+      <h2 class="section-title">Why This Matters in South Africa</h2>
+      <p>Phishing is the number one cybersecurity threat facing South Africans right now. According to the Interpol 2024 African Cyberthreat Assessment Report, South Africa recorded more phishing attacks than any other country on the continent.</p>
+      <p>The problem is not just global platforms and foreign hackers. South African attackers are creating locally targeted scams using brands and institutions that South Africans trust every day - SASSA, Standard Bank, FNB, ABSA, Capitec, and even the South African Revenue Service (SARS).</p>
+
+      <div class="highlight warning">
+        <div class="highlight-title">SA Fact</div>
+        <p>In 2024, South Africa recorded 17,849 ransomware detections - the highest on the African continent. Many of these attacks began with a single phishing email or WhatsApp message.</p>
+      </div>
+
+      <p>As a student entering the IT industry, you will be a target. Attackers specifically target graduates applying for jobs, because you are actively sharing your CV, clicking unknown links, and communicating with unfamiliar email addresses.</p>
+    </section>
+
+    <!-- TOPIC 2: WHAT IS PHISHING -->
+    <section class="section" id="what-is">
+      <div class="section-tag">Topic 1</div>
+      <h2 class="section-title">What is Phishing?</h2>
+      <p>Phishing is a type of social engineering attack where an attacker pretends to be a trusted person or organisation to trick you into revealing sensitive information, clicking a malicious link, or downloading malware.</p>
+      <p>The word comes from "fishing" - attackers cast a wide net hoping someone takes the bait. The key difference from technical hacking is that phishing attacks <strong>the human, not the computer</strong>. No advanced technical knowledge is needed to fall victim.</p>
+
+      <div class="highlight">
+        <div class="highlight-title">Social Engineering</div>
+        <p>Social engineering is the psychological manipulation of people into performing actions or giving up confidential information. Phishing is the most common form of social engineering. It exploits trust, urgency, fear, and curiosity - not software vulnerabilities.</p>
+      </div>
+
+      <h3 style="font-size:16px;font-weight:600;color:var(--white);margin:24px 0 12px;">Types of Phishing</h3>
+      <ul class="check-list">
+        <li><strong>Email Phishing</strong> - Fake emails pretending to be from banks, SASSA, or companies. The most common type.</li>
+        <li><strong>Smishing (SMS Phishing)</strong> - Fake SMS messages. Very common in SA targeting banking customers.</li>
+        <li><strong>Vishing (Voice Phishing)</strong> - Phone calls where attackers pretend to be from your bank or SARS.</li>
+        <li><strong>WhatsApp Phishing</strong> - Fake messages sent via WhatsApp, often impersonating known contacts or businesses.</li>
+        <li><strong>Spear Phishing</strong> - Targeted phishing using personal information about you to make the attack more convincing.</li>
+      </ul>
+    </section>
+
+    <!-- TOPIC 3: RECOGNISING -->
+    <section class="section" id="recognise">
+      <div class="section-tag">Topic 2</div>
+      <h2 class="section-title">Recognising Phishing Attempts</h2>
+      <p>Learning to spot phishing is a skill. The more you practise, the better you get. Here are the most important red flags to look for:</p>
+
+      <div class="red-flag">Urgency or threats - "Your account will be suspended in 24 hours" or "Act now or lose your SASSA grant"</div>
+      <div class="red-flag">Suspicious sender address - The display name says "FNB Support" but the email is from fnb-support@gmail-secure.com</div>
+      <div class="red-flag">Generic greetings - "Dear Customer" instead of your actual name</div>
+      <div class="red-flag">Suspicious links - Hover over links before clicking. A link that says "fnb.co.za" might actually go to "fnb-secure.xyz"</div>
+      <div class="red-flag">Requests for personal information - Legitimate organisations never ask for your PIN, password, or OTP via SMS or email</div>
+      <div class="red-flag">Poor grammar and spelling - Many phishing messages contain obvious errors, though AI is making this less common</div>
+      <div class="red-flag">Unexpected attachments - Especially .exe, .zip, or Office files you were not expecting</div>
+
+      <div class="example-card">
+        <div class="ex-label">Spot the Phish - Exercise</div>
+        <div class="ex-title">Which of these two messages is real?</div>
+
+        <div class="fake-message">
+          <div class="sender">From: ABSA-Bank &lt;security@absa-alerts.co.za&gt;</div>
+          URGENT: Your ABSA account has been flagged for suspicious activity. Your account will be SUSPENDED in 2 hours unless you verify your details immediately. Click here: http://bit.ly/absa-verify-now
+        </div>
+        <p style="font-size:12px;color:var(--red);margin:4px 0 12px 4px;">⚠ FAKE - Notice: third-party domain, urgency, bit.ly link, no personalisation</p>
+
+        <div class="real-message">
+          <div class="sender">From: ABSA &lt;noreply@absa.co.za&gt;</div>
+          Hi Kagiso, your ABSA card ending in 4821 was used at Checkers Sandton on 18 Sep 2026 at 14:23 for R245.00. If this was not you, please call 0800 111 155.
+        </div>
+        <p style="font-size:12px;color:var(--green);margin:4px 0 0 4px;">✓ REAL - Notice: official domain, your name, specific card details, phone number (no link)</p>
+      </div>
+    </section>
+
+    <!-- TOPIC 4: SA THREATS -->
+    <section class="section" id="sa-threats">
+      <div class="section-tag">Topic 3</div>
+      <h2 class="section-title">South African Specific Threats</h2>
+      <p>While global phishing tactics apply, South Africa has unique attack vectors that you need to be specifically aware of.</p>
+
+      <div class="example-card">
+        <div class="ex-label">SA Threat 1</div>
+        <div class="ex-title">SASSA Grant Fraud</div>
+        <p>Attackers send SMS messages claiming your SASSA Social Relief of Distress (SRD) grant has been approved or there is a problem with your payment. They ask you to click a link and enter your ID number and bank details.</p>
+        <div class="highlight danger" style="margin-top:12px;">
+          <div class="highlight-title">Remember</div>
+          <p>SASSA will never ask for your banking details or PIN via SMS or WhatsApp. Verify any SASSA communication at sassa.gov.za or call 0800 60 10 11.</p>
+        </div>
+      </div>
+
+      <div class="example-card">
+        <div class="ex-label">SA Threat 2</div>
+        <div class="ex-title">Fake Graduate Recruitment Emails</div>
+        <p>Attackers create fake job offers from well-known South African companies like Capitec, KPMG, Deloitte, or government departments. They ask you to fill in a form with your ID number, bank account, and personal details - or to pay a "registration fee" to secure the position.</p>
+        <div class="highlight danger" style="margin-top:12px;">
+          <div class="highlight-title">Remember</div>
+          <p>Legitimate employers in South Africa never ask for money or your full banking details during the recruitment process. Verify job offers directly on the company's official website.</p>
+        </div>
+      </div>
+
+      <div class="example-card">
+        <div class="ex-label">SA Threat 3</div>
+        <div class="ex-title">WhatsApp Business Impersonation</div>
+        <p>Attackers create WhatsApp accounts with the logos of banks or shops and send messages about "unclaimed prizes", "double cashback offers", or "account verification". They may even use a green tick to appear legitimate.</p>
+        <div class="highlight danger" style="margin-top:12px;">
+          <div class="highlight-title">Remember</div>
+          <p>A green badge on WhatsApp does not guarantee legitimacy. Never share OTPs or banking PINs in any WhatsApp conversation.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOPIC 5: RESPOND -->
+    <section class="section" id="respond">
+      <div class="section-tag">Topic 4</div>
+      <h2 class="section-title">Responding and Reporting in South Africa</h2>
+
+      <h3 style="font-size:16px;font-weight:600;color:var(--white);margin:0 0 12px;">If you clicked a suspicious link:</h3>
+      <ul class="check-list">
+        <li>Do not enter any personal information on the page that opens</li>
+        <li>Close the page immediately and disconnect from Wi-Fi</li>
+        <li>Change your passwords for any accounts that may have been compromised</li>
+        <li>Enable MFA on all accounts if you have not already done so</li>
+        <li>Run a malware scan on your device</li>
+        <li>Contact your bank immediately if you entered any financial details</li>
+      </ul>
+
+      <h3 style="font-size:16px;font-weight:600;color:var(--white);margin:24px 0 12px;">Where to report phishing in South Africa:</h3>
+      <ul class="check-list">
+        <li><strong>Your bank's fraud line</strong> - FNB: 087 575 9444 | Standard Bank: 0800 020 600 | ABSA: 0800 111 155 | Capitec: 0860 10 20 43</li>
+        <li><strong>SABRIC</strong> (South African Banking Risk Information Centre) - report banking-related phishing at sabric.co.za</li>
+        <li><strong>SAPS Cybercrime Unit</strong> - report cybercrime at saps.gov.za or call 10111</li>
+        <li><strong>Cybersecurity Hub</strong> - Department of Communications and Digital Technologies: cybersecurityhub.gov.za</li>
+        <li><strong>SASSA fraud line</strong> - 0800 60 10 11 if you encounter SASSA-related scams</li>
+      </ul>
+
+      <div class="highlight success">
+        <div class="highlight-title">Quick Tip</div>
+        <p>Screenshot suspicious messages before deleting them. This creates evidence if you need to file a report with SAPS or your bank.</p>
+      </div>
+    </section>
+
+    <!-- KNOWLEDGE CHECK -->
+    <section class="section" id="quiz">
+      <div class="section-tag">Knowledge Check</div>
+      <h2 class="section-title">Test Your Understanding</h2>
+
+      <div class="quiz-box">
+        <div class="quiz-title">Module 1 Quiz</div>
+        <div class="quiz-sub">Answer all questions. You need 70% to pass.</div>
+
+        <div class="quiz-q">
+          <div class="q-text">1. You receive an SMS saying "Your FNB account is locked. Verify at: http://bit.ly/fnb-help". What is the most suspicious element?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q1" value="a"> The message mentions FNB</label>
+            <label class="option"><input type="radio" name="q1" value="b"> The link uses a URL shortener (bit.ly) instead of fnb.co.za</label>
+            <label class="option"><input type="radio" name="q1" value="c"> The message came via SMS</label>
+            <label class="option"><input type="radio" name="q1" value="d"> The message says the account is locked</label>
+          </div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="q-text">2. What does "smishing" refer to?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q2" value="a"> Phishing via email</label>
+            <label class="option"><input type="radio" name="q2" value="b"> Phishing via phone call</label>
+            <label class="option"><input type="radio" name="q2" value="c"> Phishing via SMS</label>
+            <label class="option"><input type="radio" name="q2" value="d"> Phishing via social media</label>
+          </div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="q-text">3. A WhatsApp message from an unknown number offers you a job at Capitec and asks for your ID number and bank account to "process your application". What should you do?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q3" value="a"> Share the details - Capitec is a legitimate company</label>
+            <label class="option"><input type="radio" name="q3" value="b"> Ask them to send more information first</label>
+            <label class="option"><input type="radio" name="q3" value="c"> Do not share any details. Verify directly at capitecbank.co.za and report to SAPS</label>
+            <label class="option"><input type="radio" name="q3" value="d"> Only share your ID number, not your bank account</label>
+          </div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="q-text">4. Which organisation handles banking-related phishing reports in South Africa?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q4" value="a"> SASSA</label>
+            <label class="option"><input type="radio" name="q4" value="b"> SABRIC</label>
+            <label class="option"><input type="radio" name="q4" value="c"> SARS</label>
+            <label class="option"><input type="radio" name="q4" value="d"> ICASA</label>
+          </div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="q-text">5. True or False: Social engineering attacks exploit software vulnerabilities to access your data.</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q5" value="true"> True</label>
+            <label class="option"><input type="radio" name="q5" value="false"> False - social engineering exploits human psychology, not software</label>
+          </div>
+        </div>
+
+        <button class="quiz-btn" onclick="checkQuiz()">Submit Answers</button>
+        <div class="quiz-result" id="quiz-result"></div>
+      </div>
+    </section>
+
+    <!-- NAV FOOTER -->
+    <div class="nav-footer">
+      <a class="nav-btn secondary" href="index.html">← Back to Modules</a>
+      <a class="nav-btn primary" href="module2.html">Next: Cybercrimes Act &amp; POPIA →</a>
+    </div>
+
+  </main>
+</div>
+
+<script>
+function checkQuiz() {
+  const answers = { q1: 'b', q2: 'c', q3: 'c', q4: 'b', q5: 'false' };
+  let score = 0;
+  let total = Object.keys(answers).length;
+
+  for (const [q, correct] of Object.entries(answers)) {
+    const selected = document.querySelector(`input[name="${q}"]:checked`);
+    const options = document.querySelectorAll(`input[name="${q}"]`);
+    options.forEach(opt => {
+      const label = opt.parentElement;
+      label.classList.remove('correct', 'wrong');
+    });
+    if (selected) {
+      if (selected.value === correct) {
+        selected.parentElement.classList.add('correct');
+        score++;
+      } else {
+        selected.parentElement.classList.add('wrong');
+        document.querySelector(`input[name="${q}"][value="${correct}"]`).parentElement.classList.add('correct');
+      }
+    } else {
+      document.querySelector(`input[name="${q}"][value="${correct}"]`).parentElement.classList.add('correct');
+    }
+  }
+
+  const pct = Math.round((score / total) * 100);
+  const result = document.getElementById('quiz-result');
+  result.className = 'quiz-result show ' + (pct >= 70 ? 'pass' : 'fail');
+  result.textContent = pct >= 70
+    ? `✓ Well done! You scored ${score}/${total} (${pct}%). You have passed this knowledge check.`
+    : `✗ You scored ${score}/${total} (${pct}%). Review the sections above and try again. You need 70% to pass.`;
+}
+</script>
+
+<script src="app.js"></script></body>
+</html>

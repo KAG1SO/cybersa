@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CyberSA Post-assessment</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#22213A;--muted:#6B6B85;--indigo:#4C5FD5;--lav:#EDEAFB;--canvas:#FAF9FB;--line:#E4E2EE;--green:#2E9B6F;--red:#D95C5C}*{box-sizing:border-box}body{margin:0;background:#fff;color:var(--ink);font:15px Inter,Arial,sans-serif}.top{padding:18px 5%;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.brand{font-weight:700;color:var(--ink);text-decoration:none}.top a.back{font-size:13px;color:var(--indigo);text-decoration:none}.wrap{max-width:820px;margin:42px auto;padding:0 20px 60px}.eyebrow{color:var(--indigo);text-transform:uppercase;letter-spacing:.7px;font-size:11px;font-weight:700}.wrap h1{font-size:32px;margin:9px 0}.intro{color:var(--muted);line-height:1.7}.status,.result{margin:20px 0;padding:16px 18px;border-radius:10px;background:var(--canvas);border:1px solid var(--line);line-height:1.6}.status.error,.result.fail{color:var(--red);border-color:#efcaca}.status.ready,.result.pass{color:var(--green);border-color:#c8e5d8}.q{border:1px solid var(--line);border-radius:12px;padding:18px;margin:14px 0}.q legend{padding:0 6px;font-weight:600;line-height:1.5}.option{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);border-radius:8px;margin-top:8px;cursor:pointer;line-height:1.5}.option:hover{background:var(--canvas)}input{accent-color:var(--indigo);margin-top:4px}.btn{display:inline-block;padding:12px 18px;border:0;border-radius:8px;background:var(--indigo);color:#fff;font:600 14px Inter,Arial,sans-serif;cursor:pointer}.btn:disabled{opacity:.6;cursor:wait}.hidden{display:none!important}@media(max-width:600px){.wrap{margin-top:28px}.wrap h1{font-size:26px}.top{padding:15px 18px}}
+</style>
+</head>
+<body>
+<header class="top"><a class="brand" href="index.html">CyberSA Learn</a><a class="back" href="index.html">Back to modules</a></header>
+<main class="wrap">
+  <div class="eyebrow">Phase 4 · Post-assessment</div>
+  <h1>Check what you’ve learned</h1>
+  <p class="intro">Answer 10 questions covering all five CyberSA modules. You need 70% to pass. Your result is recorded separately from the module knowledge checks, and you can retry if needed.</p>
+  <div id="status" class="status">Checking your module progress…</div>
+  <form id="assessment" class="hidden">
+    <div id="questions"></div>
+    <button id="submit" class="btn" type="submit">Submit post-assessment</button>
+  </form>
+  <div id="result" class="result hidden" aria-live="polite"></div>
+  <div id="answer-review" class="result hidden"></div>
+  <form id="feedback" class="status hidden">
+    <h2 style="margin:0 0 8px;font-size:19px">Phase 5 · Feedback</h2>
+    <p style="margin:0 0 14px">Tell us how useful the CyberSA learning experience was. This is recorded separately from your assessment score.</p>
+    <label for="rating">How useful was the course?</label>
+    <select id="rating" required style="display:block;width:100%;margin:7px 0 12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font:inherit">
+      <option value="5">5 - Very useful</option><option value="4">4 - Useful</option><option value="3">3 - Neutral</option><option value="2">2 - Not very useful</option><option value="1">1 - Not useful</option>
+    </select>
+    <label for="comment">Comments (optional)</label>
+    <textarea id="comment" rows="4" placeholder="What worked well, or what could be improved?" style="display:block;width:100%;margin:7px 0 12px;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;resize:vertical"></textarea>
+    <button id="feedback-submit" class="btn" type="submit">Submit feedback</button>
+    <span id="feedback-status" style="margin-left:10px;color:var(--green)" aria-live="polite"></span>
+  </form>
+</main>
+<script>
+const items=[
+  {q:'You receive an urgent email asking you to verify your university account through a link. What should you do first?',o:['Click quickly before the link expires','Check the sender and verify through the university’s official website or IT service desk','Reply with your password to confirm your identity','Forward it to classmates'],a:1},
+  {q:'What does POPIA primarily regulate?',o:['The speed of internet connections','The lawful handling and protection of personal information','The use of open-source software','Online gaming accounts'],a:1},
+  {q:'Which is the strongest approach to account passwords?',o:['Reuse one memorable password everywhere','Use a unique, long password for each account, stored in a password manager','Use your name and birth year','Change one character in the same password for every site'],a:1},
+  {q:'What does multi-factor authentication add to a sign-in?',o:['A second kind of identity check in addition to the password','A longer username','Automatic password sharing','Public access to your account'],a:0},
+  {q:'Which information is safest to share publicly on social media?',o:['Your live location and travel dates','A photo of your ID for verification','Only information you are comfortable being widely visible','Your security-question answers'],a:2},
+  {q:'An unfamiliar account sends you a link to claim a prize. What is the safest response?',o:['Open it in a private browser window','Do not open it; verify the offer independently and report the account if suspicious','Send the link to friends to ask if it works','Enter only your email address'],a:1},
+  {q:'A message says your bank account will be blocked unless you act now. What is a common warning sign?',o:['It uses the bank’s usual app','It creates urgency and asks you to use a message link','You initiated contact using the number on your bank card','It contains no request'],a:1},
+  {q:'Files become encrypted and a message demands payment. What type of malware is most likely involved?',o:['Adware','Ransomware','A password manager','A firewall'],a:1},
+  {q:'What is the first response if you suspect a device is compromised?',o:['Disconnect it from networks and contact your IT support team','Delete files that look unusual','Pay any demand immediately','Continue using it to see what happens'],a:0},
+  {q:'What should you do before entering banking details on public Wi-Fi?',o:['Use any network with “free” in its name','Avoid the transaction or use a trusted secure connection such as your mobile network','Turn off your device firewall','Share the network password publicly'],a:1}
+];
+const token=localStorage.getItem('cybersaAuthToken');
+const statusEl=document.getElementById('status');
+const form=document.getElementById('assessment');
+const resultEl=document.getElementById('result');
+const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+document.getElementById('questions').innerHTML=items.map((item,i)=>`<fieldset class="q"><legend>${i+1}. ${escapeHtml(item.q)}</legend>${item.o.map((option,j)=>`<label class="option"><input type="radio" name="q${i+1}" value="${j}" required><span>${escapeHtml(option)}</span></label>`).join('')}</fieldset>`).join('');
+async function initialize(){
+  if(!token){statusEl.textContent='Start or log in to your learner record from the module page, then return here.';return;}
+  try{
+    const res=await fetch('/api/progress',{headers:{Authorization:`Bearer ${token}`}});
+    if(!res.ok)throw new Error('Could not load your module progress. Please return to the learning site and try again.');
+    const data=await res.json();
+    const completed=new Set(data.completed_modules||[]);
+    const missing=['M1','M2','M3','M4','M5'].filter(id=>!completed.has(id));
+    if(missing.length){statusEl.textContent=`Complete and pass all five module knowledge checks before taking the post-assessment. Modules remaining: ${missing.map(id=>id.replace('M','')).join(', ')}.`;return;}
+    statusEl.textContent='All five modules are complete. You’re ready to begin.';statusEl.className='status ready';form.classList.remove('hidden');
+  }catch(e){statusEl.textContent=e.message;statusEl.className='status error';}
+}
+form.addEventListener('submit',async event=>{
+  event.preventDefault();
+  if(!form.reportValidity())return;
+  const button=document.getElementById('submit');button.disabled=true;button.textContent='Saving your result…';
+  let score=0;const answers={};
+  items.forEach((item,i)=>{const selected=form.querySelector(`input[name="q${i+1}"]:checked`);const value=Number(selected.value);answers[`q${i+1}`]=value;if(value===item.a)score++;});
+  const percentage=Math.round(score/items.length*100);
+  try{
+    const response=await fetch('/api/attempts',{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({module_id:'POST',attempt_type:'post_assessment',score,total:items.length,percentage,answers})});
+    if(!response.ok)throw new Error('Your result could not be saved. Please try again.');
+    resultEl.className=`result ${percentage>=70?'pass':'fail'}`;resultEl.textContent=`${percentage>=70?'You passed':'Not passed yet'}: ${score} out of ${items.length} (${percentage}%). ${percentage>=70?'Your post-assessment result has been recorded.':'Review the modules and try again.'}`;resultEl.classList.remove('hidden');
+    const review=document.getElementById('answer-review');review.innerHTML='<strong>Answer review</strong>'+items.map((item,i)=>{const correct=answers[`q${i+1}`]===item.a;return `<div style="padding:12px 0;border-bottom:1px solid var(--line);line-height:1.6"><strong style="color:${correct?'var(--green)':'var(--red)'}">${i+1}. ${correct?'Correct':'Review this answer'}</strong><br>Your answer: ${escapeHtml(item.o[answers[`q${i+1}`]])}${correct?'':`<br>Correct answer: ${escapeHtml(item.o[item.a])}`}</div>`}).join('');review.classList.remove('hidden');
+    document.getElementById('feedback').classList.remove('hidden');
+    resultEl.scrollIntoView({behavior:'smooth',block:'center'});
+  }catch(e){alert(e.message);}
+  finally{button.disabled=false;button.textContent='Submit post-assessment';}
+});
+document.getElementById('feedback').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const button=document.getElementById('feedback-submit'),message=document.getElementById('feedback-status');button.disabled=true;message.textContent='Saving…';
+  try{
+    const response=await fetch('/api/feedback',{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({module_id:'POST',rating:Number(document.getElementById('rating').value),comment:document.getElementById('comment').value.trim()})});
+    if(!response.ok)throw new Error('Feedback could not be saved. Please try again.');
+    message.textContent='Thanks — your feedback was recorded.';document.getElementById('feedback-submit').remove();
+  }catch(e){message.textContent=e.message;button.disabled=false;}
+});
+initialize();
+</script>
+<script src="app.js"></script>
+</body>
+</html>

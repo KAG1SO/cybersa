@@ -1,0 +1,15 @@
+# Local Python environment and generated files
+.venv/
+__pycache__/
+*.py[cod]
+
+# Local database and SQLite journal files (may contain participant data)
+cybersa.db
+cybersa.db-*
+*.sqlite
+*.sqlite3
+
+# Local secrets
+.env
+.env.*
+!.env.example

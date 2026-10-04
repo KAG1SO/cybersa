@@ -1,0 +1,231 @@
+/* CyberSA Learn central research tracking client */
+(function () {
+  const API = '/api';
+  const TOKEN_KEY = 'cybersaAuthToken';
+  const USER_KEY = 'cybersaLearner';
+  const MODS = {
+    'module1.html': { id: 'M1', title: 'Phishing & Social Engineering' },
+    'module2.html': { id: 'M2', title: 'Cybercrimes Act 2021 & POPIA' },
+    'module3.html': { id: 'M3', title: 'Password Security & Authentication' },
+    'module4.html': { id: 'M4', title: 'Safe Internet & Social Media Use' },
+    'module5.html': { id: 'M5', title: 'Cyber Attack Awareness' }
+  };
+  const page = location.pathname.split('/').pop() || 'index.html';
+  const mod = MODS[page];
+
+  const token = () => localStorage.getItem(TOKEN_KEY);
+  const authHeaders = () => token() ? { Authorization: `Bearer ${token()}` } : {};
+  const esc = s => String(s ?? '').replace(/[&<>'"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[c]));
+
+  async function api(path, options = {}) {
+    const headers = { ...(options.headers || {}), ...authHeaders() };
+    if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+    const res = await fetch(`${API}${path}`, { ...options, headers });
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).detail || `Request failed (${res.status})`);
+    return res.status === 204 ? null : res.json();
+  }
+
+  function ensureStyles() {
+    if (document.getElementById('cs-track-style')) return;
+    const s = document.createElement('style'); s.id = 'cs-track-style';
+    s.textContent = `
+      #cs-modal{position:fixed;inset:0;background:rgba(34,33,58,.28);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:18px}
+      #cs-modal .box{max-width:480px;width:100%;background:#fff;border:1px solid #E4E2EE;border-radius:16px;padding:28px;box-shadow:0 24px 70px rgba(34,33,58,.18)}
+      #cs-modal h2{color:#22213A;margin:0 0 8px;font-size:22px}#cs-modal p{color:#6B6B85;font-size:13px;line-height:1.6;margin:0 0 18px}
+      #cs-modal label{display:block;color:#22213A;font-size:12px;font-weight:600;margin:12px 0 6px}#cs-modal input{width:100%;padding:11px 12px;border-radius:8px;border:1px solid #E4E2EE;background:#fff;color:#22213A;font:inherit}
+      #cs-modal button,#cs-recovery button{width:100%;margin-top:18px;padding:11px;border:0;border-radius:8px;background:#4C5FD5;color:#fff;font-weight:700;cursor:pointer}
+      #cs-modal .cs-switch{display:block;margin-top:14px;text-align:center;color:#4C5FD5;font-size:12px;cursor:pointer}#cs-recovery{position:fixed;inset:0;background:rgba(34,33,58,.28);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:10000;padding:18px}#cs-recovery .box{max-width:500px;width:100%;background:#fff;border:1px solid #E4E2EE;border-radius:16px;padding:28px;box-shadow:0 24px 70px rgba(34,33,58,.18)}#cs-recovery h2{margin:0 0 10px;color:#22213A}#cs-recovery p{color:#6B6B85;font-size:13px;line-height:1.6}#cs-recovery input{width:100%;margin-top:12px;padding:12px;border:1px solid #E4E2EE;border-radius:8px;font:700 18px monospace;letter-spacing:1px;color:#22213A}
+      .cs-user{color:#4C5FD5;font-weight:600}.cs-feedback{margin:28px 0;padding:22px;background:#FAF9FB;border:1px solid #E4E2EE;border-radius:12px}.cs-feedback h3{margin:0 0 6px;color:#22213A}.cs-feedback p{color:#6B6B85;font-size:13px}
+      .cs-feedback select,.cs-feedback textarea{width:100%;margin-top:8px;background:#fff;color:#22213A;border:1px solid #E4E2EE;border-radius:8px;padding:10px;font:inherit}.cs-feedback textarea{min-height:90px;resize:vertical}.cs-feedback button{margin-top:12px;padding:10px 18px;border:0;border-radius:7px;background:#4C5FD5;color:#fff;font-weight:700}
+      .cs-user-menu{display:inline-flex;align-items:center;gap:10px}.cs-logout{border:1px solid #E4E2EE;background:#fff;color:#22213A;border-radius:7px;padding:7px 10px;font-size:11px;cursor:pointer}.cs-logout:hover{border-color:#C8C5E8;color:#4C5FD5}
+      .topic-link.active{color:#2E9B6F!important}.topic-link.active .dot{background:#2E9B6F!important}
+    `; document.head.appendChild(s);
+  }
+
+  function showLogin() {
+    ensureStyles();
+    if (document.getElementById('cs-modal')) return;
+    const m = document.createElement('div'); m.id = 'cs-modal';
+    m.innerHTML = `<div class="box"><h2>Welcome to CyberSA Learn</h2><div id="cs-create-panel"><p>Create a new learner record to begin. You’ll receive a participant ID and a recovery code to save.</p><label>Name <span style="color:#6B6B85">(optional)</span></label><input id="cs-name" placeholder="Your name" autocomplete="name"><button id="cs-start">Create learner record</button><span class="cs-switch" id="cs-show-login">Already have a participant ID? Sign in</span></div><div id="cs-login-panel" style="display:none"><p>Enter your participant ID and recovery code to return to your learner record.</p><label>Participant ID</label><input id="cs-participant-id" placeholder="CS-0001" autocomplete="username"><label>Recovery code</label><input id="cs-recovery-code" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="one-time-code"><button id="cs-login">Sign in</button><span class="cs-switch" id="cs-show-create">Create a new learner record</span></div><p style="margin:20px 0 0;text-align:center"><a href="dashboard.html" style="color:#4C5FD5;font-size:13px;font-weight:600">Researcher sign in →</a></p></div>`;
+    document.body.appendChild(m);
+    document.getElementById('cs-show-login').onclick = () => { document.getElementById('cs-create-panel').style.display='none'; document.getElementById('cs-login-panel').style.display='block'; };
+    document.getElementById('cs-show-create').onclick = () => { document.getElementById('cs-login-panel').style.display='none'; document.getElementById('cs-create-panel').style.display='block'; };
+    document.getElementById('cs-start').onclick = async () => {
+      const button = document.getElementById('cs-start'); button.disabled = true; button.textContent = 'Creating learner record...';
+      try {
+        const user = await api('/learners', { method:'POST', body: JSON.stringify({ name: document.getElementById('cs-name').value.trim() }) });
+        localStorage.setItem(TOKEN_KEY, user.token); localStorage.setItem(USER_KEY, user.participant_id); m.remove();
+        showRecoveryCode(user.recovery_code, () => location.reload());
+      } catch (e) { button.disabled = false; button.textContent = 'Start Learning'; alert(e.message); }
+    };
+    document.getElementById('cs-login').onclick = async () => {
+      const button=document.getElementById('cs-login');button.disabled=true;button.textContent='Signing in...';
+      try {
+        const user=await api('/learners/session',{method:'POST',body:JSON.stringify({participant_id:document.getElementById('cs-participant-id').value.trim(),recovery_code:document.getElementById('cs-recovery-code').value.trim()})});
+        localStorage.setItem(TOKEN_KEY,user.token);localStorage.setItem(USER_KEY,user.participant_id);location.reload();
+      } catch(e) { button.disabled=false;button.textContent='Sign in';alert(e.message); }
+    };
+  }
+
+  function showResearcherError() {
+    const reason = new URLSearchParams(location.search).get('researcherError');
+    if (!reason) return;
+    const messages = {
+      invalid: 'Researcher sign-in failed. The password was incorrect. Please try again.',
+      unavailable: 'Researcher sign-in failed because the server could not be reached. Check that CyberSA is running, then try again.'
+    };
+    const message = messages[reason];
+    if (message) {
+      const notice = document.createElement('div');
+      notice.setAttribute('role', 'alert');
+      notice.setAttribute('aria-live', 'assertive');
+      notice.textContent = message;
+      notice.style.cssText = 'margin:14px 0;padding:12px 14px;border:1px solid #F1B9B5;border-radius:9px;background:#FFF4F2;color:#A52A22;font-size:13px;line-height:1.5';
+      const box = document.querySelector('#cs-modal .box');
+      if (box) box.querySelector('h2').insertAdjacentElement('afterend', notice);
+      else document.querySelector('.topbar')?.insertAdjacentElement('afterend', notice);
+    }
+    history.replaceState(null, '', location.pathname + location.hash);
+  }
+
+  function showRecoveryCode(code, onContinue=()=>{}) {
+    ensureStyles();
+    const modal=document.createElement('div');modal.id='cs-recovery';
+    modal.innerHTML=`<div class="box"><h2>Save your recovery code</h2><p>This code lets you return to <strong>${esc(localStorage.getItem(USER_KEY))}</strong> and its saved progress. It is shown only now. Save it somewhere private; anyone with your participant ID and code can access this learner record.</p><input id="cs-recovery-value" value="${esc(code)}" readonly aria-label="Recovery code"><button id="cs-copy-code" type="button">Copy recovery code</button><button id="cs-saved-code" type="button">I’ve saved it — continue</button></div>`;
+    document.body.appendChild(modal);
+    document.getElementById('cs-copy-code').onclick=async()=>{const field=document.getElementById('cs-recovery-value');try{await navigator.clipboard.writeText(code);document.getElementById('cs-copy-code').textContent='Copied';}catch{field.select();document.execCommand('copy');document.getElementById('cs-copy-code').textContent='Copied';}};
+    document.getElementById('cs-saved-code').onclick=()=>{modal.remove();onContinue();};
+  }
+
+  async function ensureRecoveryCode() {
+    try {
+      const status=await api('/recovery-code');
+      if(!status.has_recovery_code){const issued=await api('/recovery-code',{method:'POST',body:'{}'});if(issued.recovery_code)showRecoveryCode(issued.recovery_code);}
+    } catch(e) { console.error('Could not check learner recovery code',e); }
+  }
+
+  async function currentUser() { if (!token()) return null; try { return await api('/me'); } catch { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); return null; } }
+
+  function renderUser(user) {
+    if (!user) return;
+    document.querySelectorAll('.student').forEach(e => { e.textContent = user.name ? `${user.name} · ${user.participant_id}` : user.participant_id; e.classList.add('cs-user'); });
+    const label = document.getElementById('participant-label'); if (label) label.textContent = user.name ? `${user.name} · ${user.participant_id}` : `Participant ${user.participant_id}`;
+    document.querySelectorAll('.topbar-right,.top-actions').forEach(e => {
+      let research=e.querySelector('a[href="dashboard.html"]');if(!research){research=document.createElement('a');research.className='cs-research-link';research.href='dashboard.html';research.textContent='Researcher area';e.appendChild(research);}research.style.cssText='display:inline-block;color:#6B6B85;text-decoration:none;font-size:12px';
+      let wrap=e.querySelector('.cs-user-menu');
+      if (!wrap) { wrap = document.createElement('span'); wrap.className = 'cs-user-menu'; e.appendChild(wrap); }
+      if (wrap.querySelector('.cs-logout')) return;
+      const recovery = document.createElement('button'); recovery.className = 'cs-logout'; recovery.textContent = 'New recovery code';
+      recovery.onclick = async () => {
+        if (!confirm('Create a new recovery code? Your old code will stop working.')) return;
+        try { const result=await api('/recovery-code/rotate',{method:'POST',body:'{}'}); showRecoveryCode(result.recovery_code); }
+        catch(e) { alert(e.message); }
+      };
+      const out = document.createElement('button'); out.className = 'cs-logout'; out.textContent = 'Log out';
+      out.onclick = async () => {
+        try { await api('/logout',{method:'POST',body:'{}'}); } catch {}
+        localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY); location.href = 'index.html';
+      };
+      wrap.appendChild(recovery); wrap.appendChild(out);
+    });
+  }
+
+  function showModuleAssessmentScore(score) {
+    const label = document.querySelector('.progress-label span:last-child');
+    const fill = document.querySelector('.progress-fill');
+    if (label) label.textContent = score == null ? 'Not assessed' : `${score}%`;
+    if (fill) fill.style.width = `${score == null ? 0 : Math.max(0, Math.min(100, score))}%`;
+  }
+
+  async function trackModule(user) {
+    if (!mod || !user) return;
+    let max = 0;
+    try {
+      const saved = await api('/progress');
+      max = Number(saved.module_progress?.[mod.id] || 0);
+      showModuleAssessmentScore(saved.assessment_scores?.[mod.id] ?? null);
+    } catch { showModuleAssessmentScore(null); }
+    const send = p => {
+      max = Math.max(max, p);
+      return api('/activity', { method:'POST', headers:{'X-Module-Id':mod.id}, body:JSON.stringify({progress:max}) }).catch(()=>{});
+    };
+    if (max < 1) send(1);
+    addEventListener('scroll', () => {
+      const h = document.documentElement.scrollHeight - innerHeight;
+      const p = h > 0 ? Math.min(99, Math.round((scrollY + innerHeight) / document.documentElement.scrollHeight * 100)) : 99;
+      if (p > max) send(p);
+    }, { passive:true });
+  }
+
+  function trackTopics() {
+    const links = [...document.querySelectorAll('.topic-link[href^="#"]')];
+    const items = links.map(link => ({ link, section: document.getElementById(decodeURIComponent(link.hash.slice(1))) })).filter(item => item.section);
+    if (!items.length) return;
+    const update = () => {
+      let current = items[0];
+      for (const item of items) {
+        if (item.section.getBoundingClientRect().top <= 180) current = item;
+      }
+      for (const item of items) {
+        item.link.classList.toggle('active', item === current);
+        item.link.classList.remove('done');
+      }
+    };
+    for (const item of items) item.link.addEventListener('click', () => {
+      for (const other of items) other.link.classList.toggle('active', other === item);
+    });
+    addEventListener('scroll', update, { passive:true });
+    addEventListener('hashchange', update);
+    update();
+  }
+
+  function collectAnswers() {
+    const answers = {};
+    document.querySelectorAll('.quiz-q').forEach((q, i) => {
+      const checked = q.querySelector('input:checked'); answers[`q${i+1}`] = checked ? checked.value : null;
+    });
+    return answers;
+  }
+
+  function showFeedback() {
+    if (document.getElementById('cs-feedback')) return;
+    ensureStyles();
+    const sec = document.createElement('div'); sec.id = 'cs-feedback'; sec.className = 'cs-feedback';
+    sec.innerHTML = `<h3>Module feedback</h3><p>Your assessment has been recorded. Please give a quick rating and optional comment for the research evaluation.</p><label>How useful was this module?</label><select id="cs-rating"><option value="5">5 - Very useful</option><option value="4">4 - Useful</option><option value="3">3 - Neutral</option><option value="2">2 - Not very useful</option><option value="1">1 - Not useful</option></select><textarea id="cs-comment" placeholder="What did you find useful, confusing, or worth improving?"></textarea><button id="cs-send">Submit feedback</button>`;
+    (document.getElementById('quiz') || document.querySelector('.main'))?.appendChild(sec);
+    document.getElementById('cs-send').onclick = async () => {
+      const button = document.getElementById('cs-send'); button.disabled = true;
+      try { await api('/feedback', {method:'POST', body:JSON.stringify({module_id:mod.id, rating:+document.getElementById('cs-rating').value, comment:document.getElementById('cs-comment').value.trim()})}); sec.innerHTML='<h3>Thank you.</h3><p>Your feedback has been recorded for the research evaluation.</p>'; }
+      catch(e){ button.disabled=false; alert(e.message); }
+    };
+  }
+
+  function patchQuiz() {
+    if (!mod || typeof window.checkQuiz !== 'function' || window.__csPatched) return false;
+    const original = window.checkQuiz;
+    window.checkQuiz = function() {
+      original();
+      setTimeout(async () => {
+        const result = document.getElementById('quiz-result'); const txt = result?.textContent || '';
+        const match = txt.match(/(\d+)\/(\d+)\s*\((\d+)%\)/); if (!match) return;
+        const score = +match[1], total = +match[2], percentage = +match[3];
+        showModuleAssessmentScore(percentage);
+        try {
+          await api('/attempts', {method:'POST', body:JSON.stringify({module_id:mod.id, score, total, percentage, answers:collectAnswers(), attempt_type:'knowledge_check'} )});
+        }
+        catch(e) { console.error(e); alert('Your quiz was displayed, but the research record could not be saved. Please check that the CyberSA server is running.'); }
+      }, 50);
+    };
+    window.__csPatched = true; return true;
+  }
+
+  async function init() {
+    ensureStyles();
+    if (page === 'index.html' || mod || page === 'post-assessment.html') {
+      const user = await currentUser();
+      if (!user) showLogin(); else { renderUser(user); ensureRecoveryCode(); trackModule(user); if (mod) trackTopics(); const timer=setInterval(()=>{if(patchQuiz()) clearInterval(timer)},100); }
+    }
+    showResearcherError();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();

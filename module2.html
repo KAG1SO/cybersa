@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 2: Cybercrimes Act & POPIA | CyberSA Learn</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0F1923;--panel:#162232;--panel2:#1C2D42;--border:#243548;--cyan:#00C2CB;--cyan-dim:#007A82;--gold:#F5A623;--red:#E05252;--green:#3DB88A;--text:#E4EBF2;--muted:#7A95B0;--white:#FFFFFF; }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+  .topbar{background:var(--panel);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .topbar-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+  .topbar-brand .logo{width:32px;height:32px;background:var(--cyan);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--bg)}
+  .topbar-brand .name{font-weight:700;font-size:16px;color:var(--white)}
+  .topbar-brand .sub{font-size:11px;color:var(--muted);margin-left:4px}
+  .topbar-right{display:flex;align-items:center;gap:16px;font-size:13px;color:var(--muted)}
+  .topbar-right .student{color:var(--cyan);font-weight:500}
+  .layout{display:flex;flex:1}
+  .sidebar{width:260px;min-width:260px;background:var(--panel);border-right:1px solid var(--border);padding:24px 0;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto}
+  .sidebar-section{padding:0 20px 16px}
+  .sidebar-label{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+  .sidebar-module{display:block;padding:10px 14px;border-radius:8px;text-decoration:none;font-size:13px;color:var(--muted);margin-bottom:2px;transition:background 0.15s}
+  .sidebar-module:hover{background:var(--panel2);color:var(--text)}
+  .sidebar-module.active{background:rgba(0,194,203,0.12);color:var(--cyan);font-weight:500;border-left:3px solid var(--cyan)}
+  .sidebar-module .mod-num{font-size:10px;display:block;margin-bottom:2px}
+  .sidebar-divider{border:none;border-top:1px solid var(--border);margin:12px 20px}
+  .topics-nav{padding:0 20px}
+  .topic-link{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;text-decoration:none;font-size:12.5px;color:var(--muted);margin-bottom:2px}
+  .topic-link:hover{background:var(--panel2);color:var(--text)}
+  .topic-link.active{color:var(--cyan)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--border);flex-shrink:0}
+  .topic-link.active .dot{background:var(--cyan)}
+  .main{flex:1;padding:32px 40px;max-width:860px}
+  .module-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,194,203,0.12);color:var(--cyan);border:1px solid var(--cyan-dim);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin-bottom:16px}
+  .module-title{font-size:28px;font-weight:700;color:var(--white);line-height:1.3;margin-bottom:10px}
+  .module-meta{display:flex;gap:20px;font-size:13px;color:var(--muted);margin-bottom:24px;flex-wrap:wrap}
+  .progress-wrap{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:32px}
+  .progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px}
+  .progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:3px}
+  .section{margin-bottom:40px}
+  .section-tag{font-size:11px;font-weight:600;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+  .section-title{font-size:20px;font-weight:700;color:var(--white);margin-bottom:14px}
+  .section p{font-size:14.5px;line-height:1.75;color:var(--text);margin-bottom:14px;max-width:72ch}
+  .highlight{background:var(--panel2);border:1px solid var(--border);border-left:4px solid var(--cyan);border-radius:8px;padding:16px 20px;margin:20px 0}
+  .highlight.warning{border-left-color:var(--gold)}
+  .highlight.danger{border-left-color:var(--red)}
+  .highlight.success{border-left-color:var(--green)}
+  .highlight-title{font-size:12px;font-weight:600;color:var(--cyan);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+  .highlight.warning .highlight-title{color:var(--gold)}
+  .highlight.danger .highlight-title{color:var(--red)}
+  .highlight.success .highlight-title{color:var(--green)}
+  .highlight p{font-size:14px;color:var(--text);margin:0;max-width:100%}
+  .check-list{list-style:none;margin:12px 0}
+  .check-list li{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--text);margin-bottom:8px;line-height:1.6}
+  .check-list li::before{content:"";width:18px;height:18px;min-width:18px;background:rgba(0,194,203,0.15);border:1px solid var(--cyan-dim);border-radius:4px;margin-top:2px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='%2300C2CB' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center}
+  .law-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:20px;margin:16px 0}
+  .law-card .law-title{font-size:15px;font-weight:700;color:var(--white);margin-bottom:6px}
+  .law-card .law-meta{font-size:12px;color:var(--muted);margin-bottom:12px}
+  .law-card p{font-size:14px;color:var(--text);line-height:1.7;margin-bottom:8px}
+  .penalty-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+  .penalty-card{background:rgba(224,82,82,0.08);border:1px solid rgba(224,82,82,0.25);border-radius:8px;padding:14px}
+  .penalty-card .p-num{font-size:24px;font-weight:700;color:var(--red);margin-bottom:4px}
+  .penalty-card .p-label{font-size:12px;color:var(--muted)}
+  .quiz-box{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:24px;margin:28px 0}
+  .quiz-title{font-size:16px;font-weight:700;color:var(--white);margin-bottom:6px}
+  .quiz-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+  .quiz-q{margin-bottom:22px}
+  .quiz-q .q-text{font-size:14.5px;font-weight:500;color:var(--text);margin-bottom:12px}
+  .options{display:flex;flex-direction:column;gap:8px}
+  .option{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--panel);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:14px;color:var(--text);transition:all 0.15s;user-select:none}
+  .option:hover{border-color:var(--cyan-dim);background:rgba(0,194,203,0.05)}
+  .option.correct{border-color:var(--green);background:rgba(61,184,138,0.08);color:var(--green)}
+  .option.wrong{border-color:var(--red);background:rgba(224,82,82,0.08);color:var(--red)}
+  .option input[type=radio]{accent-color:var(--cyan);width:16px;height:16px}
+  .quiz-btn{margin-top:16px;padding:10px 24px;background:var(--cyan);color:var(--bg);border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+  .quiz-result{margin-top:14px;padding:12px 16px;border-radius:8px;font-size:14px;font-weight:500;display:none}
+  .quiz-result.show{display:block}
+  .quiz-result.pass{background:rgba(61,184,138,0.12);border:1px solid var(--green);color:var(--green)}
+  .quiz-result.fail{background:rgba(224,82,82,0.1);border:1px solid var(--red);color:var(--red)}
+  .nav-footer{display:flex;justify-content:space-between;align-items:center;margin-top:48px;padding-top:24px;border-top:1px solid var(--border)}
+  .nav-btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transition:all 0.15s}
+  .nav-btn.primary{background:var(--cyan);color:var(--bg)}
+  .nav-btn.primary:hover{opacity:0.9}
+  .nav-btn.secondary{background:var(--panel2);border:1px solid var(--border);color:var(--text)}
+  .nav-btn.secondary:hover{border-color:var(--cyan-dim)}
+  @media(max-width:768px){.sidebar{display:none}.main{padding:20px 18px}}
+
+/* CyberSA clean research theme */
+:root{--bg:#ffffff;--panel:#ffffff;--panel2:#FAF9FB;--border:#E4E2EE;--cyan:#4C5FD5;--cyan-dim:#C8C5E8;--gold:#FF8C42;--red:#D95C5C;--green:#2E9B6F;--text:#22213A;--muted:#6B6B85;--white:#22213A}
+body{background:#fff;color:#22213A}.topbar{background:#fff;border-bottom:1px solid #E4E2EE}.topbar-brand .logo{background:#4C5FD5;color:#fff}.topbar-brand .name,.module-title,.section-title,.quiz-title,.example-card .ex-title{color:#22213A}.topbar-brand .sub,.topbar-right,.module-meta,.section p,.check-list li,.highlight p,.example-card p{color:#6B6B85}.topbar-right .student{color:#4C5FD5}.sidebar{background:#FAF9FB;border-right:1px solid #E4E2EE}.sidebar-module:hover,.topic-link:hover{background:#EDEAFB;color:#22213A}.sidebar-module.active{background:#EDEAFB;color:#4C5FD5;border-left-color:#4C5FD5}.topic-link.active{color:#4C5FD5}.dot{background:#D9D7E4}.module-badge{background:#EDEAFB;color:#4C5FD5;border-color:#D8D4F0}.progress-wrap,.example-card,.quiz-box,.highlight,.nav-btn.secondary{background:#FAF9FB;border-color:#E4E2EE}.progress-bar{background:#E4E2EE}.progress-fill{background:#4C5FD5}.section-tag,.highlight-title{color:#4C5FD5}.highlight.warning .highlight-title{color:#FF8C42}.highlight.danger .highlight-title{color:#D95C5C}.highlight.success .highlight-title{color:#2E9B6F}.option{background:#fff;border-color:#E4E2EE;color:#22213A}.option:hover{border-color:#C8C5E8;background:#FAF9FB}.quiz-btn,.nav-btn.primary{background:#4C5FD5;color:#fff}.nav-btn.secondary{color:#22213A}.step.active{color:#4C5FD5}.step-divider{background:#E4E2EE}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="topbar-brand" href="index.html">
+    <div class="logo">CS</div>
+    <span class="name">CyberSA Learn</span>
+    <span class="sub">| UP COS700</span>
+  </a>
+  <div class="topbar-right">
+    <span></span>
+    <span class="student"></span>
+  </div>
+</div>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Modules</div>
+      <a class="sidebar-module" href="module1.html"><span class="mod-num">Module 1</span>Phishing &amp; Social Engineering</a>
+      <a class="sidebar-module active" href="module2.html"><span class="mod-num">Module 2</span>Cybercrimes Act &amp; POPIA</a>
+      <a class="sidebar-module" href="module3.html"><span class="mod-num">Module 3</span>Password Security &amp; Auth</a>
+      <a class="sidebar-module" href="module4.html"><span class="mod-num">Module 4</span>Safe Internet &amp; Social Media</a>
+      <a class="sidebar-module" href="module5.html"><span class="mod-num">Module 5</span>Cyber Attack Awareness</a>
+    </div>
+    <hr class="sidebar-divider">
+    <div class="sidebar-section"><div class="sidebar-label">This Module</div></div>
+    <div class="topics-nav">
+      <a class="topic-link active" href="#intro"><div class="dot"></div>Introduction</a>
+      <a class="topic-link" href="#cybercrimes"><div class="dot"></div>Cybercrimes Act 2021</a>
+      <a class="topic-link" href="#popia"><div class="dot"></div>POPIA</a>
+      <a class="topic-link" href="#penalties"><div class="dot"></div>Consequences</a>
+      <a class="topic-link" href="#quiz"><div class="dot"></div>Knowledge Check</a>
+    </div>
+  </nav>
+  <main class="main">
+    <div class="module-badge">Module 2 of 5</div>
+    <h1 class="module-title">Cybercrimes Act 2021 &amp; POPIA</h1>
+    <div class="module-meta"><span>⏱ 3 hours</span><span>📚 Beginner</span><span>⚖️ SA Law</span><span>📋 10 Assessment Questions</span></div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Assessment Score</span><span>Not assessed</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+    </div>
+
+    <section class="section" id="intro">
+      <div class="section-tag">Introduction</div>
+      <h2 class="section-title">Laws That Govern You Right Now</h2>
+      <p>South Africa now has two major laws that govern how you use the internet, handle other people's data, and behave online. These laws apply to you as an individual - not just to companies.</p>
+      <p>The curriculum analysis conducted for this research confirmed that none of the seven major South African universities examined teach these laws at the undergraduate level. This means most IT graduates enter the workplace without knowing the legal framework they operate within.</p>
+      <div class="highlight warning">
+        <div class="highlight-title">Why This Matters For You</div>
+        <p>Ignorance of the law is not a defence in South Africa. If you accidentally violate POPIA or the Cybercrimes Act as a new employee, your employer and you personally could face serious consequences.</p>
+      </div>
+    </section>
+
+    <section class="section" id="cybercrimes">
+      <div class="section-tag">Topic 1</div>
+      <h2 class="section-title">The Cybercrimes Act of 2021</h2>
+      <div class="law-card">
+        <div class="law-title">Cybercrimes Act 19 of 2020 (Commenced 1 December 2021)</div>
+        <div class="law-meta">South African Government Gazette | Applies to all individuals and organisations in SA</div>
+        <p>This Act criminalises a wide range of online activities and creates obligations for reporting cybercrimes. It replaced fragmented older laws with a single comprehensive cybercrime framework.</p>
+      </div>
+
+      <h3 style="font-size:16px;font-weight:600;color:var(--white);margin:20px 0 12px;">What the Act Makes Illegal</h3>
+      <ul class="check-list">
+        <li><strong>Unlawful access</strong> - Accessing a computer system or network without permission, even if you do not steal anything</li>
+        <li><strong>Interception of data</strong> - Reading, recording, or redirecting someone else's communications without consent</li>
+        <li><strong>Cyber fraud</strong> - Using false online representations to gain financial benefit</li>
+        <li><strong>Cyber forgery</strong> - Creating fake digital documents or data</li>
+        <li><strong>Cyber extortion</strong> - Demanding money or favours under threat of a cyberattack (e.g. ransomware)</li>
+        <li><strong>Harmful data messages</strong> - Sending messages that threaten, harass, or bully someone online</li>
+        <li><strong>Identity-related crimes</strong> - Using someone else's personal information to commit a crime</li>
+      </ul>
+
+      <div class="highlight danger">
+        <div class="highlight-title">Important: Sharing Passwords</div>
+        <p>Sharing your university or work login credentials with a classmate so they can access a system is a violation of the Cybercrimes Act. Even if nothing harmful happens, the act of facilitating unauthorised access is illegal.</p>
+      </div>
+
+      <div class="highlight">
+        <div class="highlight-title">SA Case Study</div>
+        <p>In 2021, Transnet, South Africa's state-owned freight and logistics company, was hit by a ransomware attack that shut down its port operations for days. The attackers encrypted Transnet's data and demanded payment. This is a textbook example of cyber extortion under the Cybercrimes Act.</p>
+      </div>
+    </section>
+
+    <section class="section" id="popia">
+      <div class="section-tag">Topic 2</div>
+      <h2 class="section-title">POPIA - Protection of Personal Information Act</h2>
+      <div class="law-card">
+        <div class="law-title">Protection of Personal Information Act 4 of 2013 (Fully effective 1 July 2021)</div>
+        <div class="law-meta">Enforced by the Information Regulator of South Africa</div>
+        <p>POPIA governs how personal information must be collected, stored, used, and shared. It gives individuals rights over their own data and places obligations on anyone who handles that data.</p>
+      </div>
+
+      <h3 style="font-size:16px;font-weight:600;color:var(--white);margin:20px 0 12px;">What Counts as Personal Information?</h3>
+      <ul class="check-list">
+        <li>Your name, ID number, student number, and date of birth</li>
+        <li>Your physical address, email address, and phone number</li>
+        <li>Your biometric data (fingerprints, face recognition)</li>
+        <li>Your financial information including bank account details</li>
+        <li>Your health records and medical history</li>
+        <li>Photos and videos that identify you</li>
+        <li>Your opinions, beliefs, and online behaviour</li>
+      </ul>
+
+      <h3 style="font-size:16px;font-weight:600;color:var(--white);margin:20px 0 12px;">The Eight POPIA Conditions</h3>
+      <p>Any organisation that processes personal information must comply with all eight conditions:</p>
+      <ul class="check-list">
+        <li><strong>Accountability</strong> - The organisation must take responsibility for compliance</li>
+        <li><strong>Processing limitation</strong> - Only collect what is necessary for the stated purpose</li>
+        <li><strong>Purpose specification</strong> - Be clear about why you are collecting the data</li>
+        <li><strong>Further processing limitation</strong> - Do not use data for purposes beyond what was stated</li>
+        <li><strong>Information quality</strong> - Keep data accurate and up to date</li>
+        <li><strong>Openness</strong> - Be transparent about what data you collect and why</li>
+        <li><strong>Security safeguards</strong> - Protect personal data from loss, damage, or unauthorised access</li>
+        <li><strong>Data subject participation</strong> - Allow individuals to access and correct their own data</li>
+      </ul>
+
+      <div class="highlight success">
+        <div class="highlight-title">Your Rights Under POPIA</div>
+        <p>You have the right to know what personal information any organisation holds about you, to request corrections if it is wrong, to object to its use for marketing, and to complain to the Information Regulator if you believe your rights have been violated.</p>
+      </div>
+
+      <div class="highlight warning">
+        <div class="highlight-title">POPIA and Social Media</div>
+        <p>Posting someone else's personal information on social media without their consent can violate POPIA. This includes sharing screenshots of private conversations, posting someone's ID number, or sharing photos that identify a person without permission.</p>
+      </div>
+    </section>
+
+    <section class="section" id="penalties">
+      <div class="section-tag">Topic 3</div>
+      <h2 class="section-title">Consequences of Non-Compliance</h2>
+      <div class="penalty-grid">
+        <div class="penalty-card">
+          <div class="p-num">15 years</div>
+          <div class="p-label">Maximum prison sentence under the Cybercrimes Act for serious offences such as cyber extortion</div>
+        </div>
+        <div class="penalty-card">
+          <div class="p-num">R10 million</div>
+          <div class="p-label">Maximum fine for POPIA non-compliance per violation</div>
+        </div>
+      </div>
+      <p>The Information Regulator can investigate complaints, issue enforcement notices, and refer matters to the National Prosecuting Authority. Individuals - not just companies - can be held personally liable.</p>
+      <div class="highlight danger">
+        <div class="highlight-title">Student Scenario</div>
+        <p>You build a student app as a side project that collects user email addresses and passwords. You store them in plain text without encryption. If the app is breached and user data is exposed, you could face a POPIA violation as the responsible party - even as a student developer.</p>
+      </div>
+    </section>
+
+    <section class="section" id="quiz">
+      <div class="section-tag">Knowledge Check</div>
+      <h2 class="section-title">Test Your Understanding</h2>
+      <div class="quiz-box">
+        <div class="quiz-title">Module 2 Quiz</div>
+        <div class="quiz-sub">Answer all questions. You need 70% to pass.</div>
+        <div class="quiz-q">
+          <div class="q-text">1. Under the Cybercrimes Act 2021, accessing a computer system without permission is illegal even if you do not steal anything. True or False?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q1" value="true"> True</label>
+            <label class="option"><input type="radio" name="q1" value="false"> False</label>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <div class="q-text">2. Which South African body enforces POPIA compliance?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q2" value="a"> SARS</label>
+            <label class="option"><input type="radio" name="q2" value="b"> The Information Regulator</label>
+            <label class="option"><input type="radio" name="q2" value="c"> SABRIC</label>
+            <label class="option"><input type="radio" name="q2" value="d"> The Reserve Bank</label>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <div class="q-text">3. What is the maximum fine for a POPIA violation?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q3" value="a"> R1 million</label>
+            <label class="option"><input type="radio" name="q3" value="b"> R5 million</label>
+            <label class="option"><input type="radio" name="q3" value="c"> R10 million</label>
+            <label class="option"><input type="radio" name="q3" value="d"> R50 million</label>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <div class="q-text">4. A classmate shares your ID number in a WhatsApp group without your permission. Which law might this violate?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q4" value="a"> Only the Cybercrimes Act</label>
+            <label class="option"><input type="radio" name="q4" value="b"> Only POPIA</label>
+            <label class="option"><input type="radio" name="q4" value="c"> Both POPIA and potentially the Cybercrimes Act</label>
+            <label class="option"><input type="radio" name="q4" value="d"> Neither - it is not illegal</label>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <div class="q-text">5. How many conditions must an organisation comply with under POPIA?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q5" value="a"> 4</label>
+            <label class="option"><input type="radio" name="q5" value="b"> 6</label>
+            <label class="option"><input type="radio" name="q5" value="c"> 8</label>
+            <label class="option"><input type="radio" name="q5" value="d"> 10</label>
+          </div>
+        </div>
+        <button class="quiz-btn" onclick="checkQuiz()">Submit Answers</button>
+        <div class="quiz-result" id="quiz-result"></div>
+      </div>
+    </section>
+
+    <div class="nav-footer">
+      <a class="nav-btn secondary" href="module1.html">← Phishing &amp; Social Engineering</a>
+      <a class="nav-btn primary" href="module3.html">Next: Password Security →</a>
+    </div>
+  </main>
+</div>
+<script>
+function checkQuiz() {
+  const answers = {q1:'true',q2:'b',q3:'c',q4:'c',q5:'c'};
+  let score=0;
+  for(const[q,correct]of Object.entries(answers)){
+    const selected=document.querySelector(`input[name="${q}"]:checked`);
+    document.querySelectorAll(`input[name="${q}"]`).forEach(o=>o.parentElement.classList.remove('correct','wrong'));
+    if(selected){
+      if(selected.value===correct){selected.parentElement.classList.add('correct');score++;}
+      else{selected.parentElement.classList.add('wrong');document.querySelector(`input[name="${q}"][value="${correct}"]`).parentElement.classList.add('correct');}
+    } else { document.querySelector(`input[name="${q}"][value="${correct}"]`).parentElement.classList.add('correct'); }
+  }
+  const pct=Math.round((score/5)*100);
+  const r=document.getElementById('quiz-result');
+  r.className='quiz-result show '+(pct>=70?'pass':'fail');
+  r.textContent=pct>=70?`✓ Well done! You scored ${score}/5 (${pct}%). You have passed this knowledge check.`:`✗ You scored ${score}/5 (${pct}%). Review the sections above and try again.`;
+}
+</script>
+<script src="app.js"></script></body>
+</html>

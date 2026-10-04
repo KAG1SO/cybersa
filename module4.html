@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 4: Safe Internet & Social Media | CyberSA Learn</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0F1923;--panel:#162232;--panel2:#1C2D42;--border:#243548;--cyan:#00C2CB;--cyan-dim:#007A82;--gold:#F5A623;--red:#E05252;--green:#3DB88A;--text:#E4EBF2;--muted:#7A95B0;--white:#FFFFFF}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+  .topbar{background:var(--panel);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .topbar-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+  .logo{width:32px;height:32px;background:var(--cyan);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--bg)}
+  .brand-name{font-weight:700;font-size:16px;color:var(--white)}
+  .brand-sub{font-size:11px;color:var(--muted);margin-left:4px}
+  .topbar-right{font-size:13px;color:var(--muted);display:flex;gap:16px;align-items:center}
+  .student{color:var(--cyan);font-weight:500}
+  .layout{display:flex;flex:1}
+  .sidebar{width:260px;min-width:260px;background:var(--panel);border-right:1px solid var(--border);padding:24px 0;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto}
+  .sidebar-section{padding:0 20px 16px}
+  .sidebar-label{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+  .sidebar-module{display:block;padding:10px 14px;border-radius:8px;text-decoration:none;font-size:13px;color:var(--muted);margin-bottom:2px}
+  .sidebar-module:hover{background:var(--panel2);color:var(--text)}
+  .sidebar-module.active{background:rgba(0,194,203,0.12);color:var(--cyan);font-weight:500;border-left:3px solid var(--cyan)}
+  .mod-num{font-size:10px;display:block;margin-bottom:2px}
+  .sidebar-divider{border:none;border-top:1px solid var(--border);margin:12px 20px}
+  .topics-nav{padding:0 20px}
+  .topic-link{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;text-decoration:none;font-size:12.5px;color:var(--muted);margin-bottom:2px}
+  .topic-link:hover{background:var(--panel2);color:var(--text)}
+  .topic-link.active{color:var(--cyan)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--border);flex-shrink:0}
+  .topic-link.active .dot{background:var(--cyan)}
+  .main{flex:1;padding:32px 40px;max-width:860px}
+  .module-badge{display:inline-flex;align-items:center;background:rgba(0,194,203,0.12);color:var(--cyan);border:1px solid var(--cyan-dim);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin-bottom:16px}
+  .module-title{font-size:28px;font-weight:700;color:var(--white);line-height:1.3;margin-bottom:10px}
+  .module-meta{display:flex;gap:20px;font-size:13px;color:var(--muted);margin-bottom:24px;flex-wrap:wrap}
+  .progress-wrap{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:32px}
+  .progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px}
+  .progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:3px}
+  .section{margin-bottom:40px}
+  .section-tag{font-size:11px;font-weight:600;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+  .section-title{font-size:20px;font-weight:700;color:var(--white);margin-bottom:14px}
+  .section p{font-size:14.5px;line-height:1.75;color:var(--text);margin-bottom:14px;max-width:72ch}
+  .highlight{background:var(--panel2);border:1px solid var(--border);border-left:4px solid var(--cyan);border-radius:8px;padding:16px 20px;margin:20px 0}
+  .highlight.warning{border-left-color:var(--gold)}
+  .highlight.danger{border-left-color:var(--red)}
+  .highlight.success{border-left-color:var(--green)}
+  .hl-title{font-size:12px;font-weight:600;color:var(--cyan);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+  .highlight.warning .hl-title{color:var(--gold)}
+  .highlight.danger .hl-title{color:var(--red)}
+  .highlight.success .hl-title{color:var(--green)}
+  .highlight p{font-size:14px;color:var(--text);margin:0;max-width:100%}
+  .check-list{list-style:none;margin:12px 0}
+  .check-list li{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--text);margin-bottom:8px;line-height:1.6}
+  .check-list li::before{content:"";width:18px;height:18px;min-width:18px;background:rgba(0,194,203,0.15);border:1px solid var(--cyan-dim);border-radius:4px;margin-top:2px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='%2300C2CB' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center}
+  .footprint-visual{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:24px;margin:20px 0}
+  .fp-title{font-size:14px;font-weight:600;color:var(--white);margin-bottom:16px}
+  .fp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .fp-item{background:var(--panel);border-radius:8px;padding:12px;border:1px solid var(--border)}
+  .fp-item .fp-type{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+  .fp-item.active-fp .fp-type{color:var(--cyan)}
+  .fp-item.passive-fp .fp-type{color:var(--gold)}
+  .fp-item p{font-size:12.5px;color:var(--muted);margin:0}
+  .audit-checklist{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:20px;margin:20px 0}
+  .audit-title{font-size:14px;font-weight:600;color:var(--white);margin-bottom:14px}
+  .audit-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--text);cursor:pointer}
+  .audit-item:last-child{border-bottom:none}
+  .audit-cb{width:18px;height:18px;border:1.5px solid var(--border);border-radius:4px;flex-shrink:0;transition:all 0.15s;display:flex;align-items:center;justify-content:center}
+  .audit-item.checked .audit-cb{background:var(--green);border-color:var(--green)}
+  .quiz-box{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:24px;margin:28px 0}
+  .quiz-title{font-size:16px;font-weight:700;color:var(--white);margin-bottom:6px}
+  .quiz-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+  .quiz-q{margin-bottom:22px}
+  .q-text{font-size:14.5px;font-weight:500;color:var(--text);margin-bottom:12px}
+  .options{display:flex;flex-direction:column;gap:8px}
+  .option{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--panel);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:14px;color:var(--text);transition:all 0.15s;user-select:none}
+  .option:hover{border-color:var(--cyan-dim);background:rgba(0,194,203,0.05)}
+  .option.correct{border-color:var(--green);background:rgba(61,184,138,0.08);color:var(--green)}
+  .option.wrong{border-color:var(--red);background:rgba(224,82,82,0.08);color:var(--red)}
+  .option input[type=radio]{accent-color:var(--cyan);width:16px;height:16px}
+  .quiz-btn{margin-top:16px;padding:10px 24px;background:var(--cyan);color:var(--bg);border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+  .quiz-result{margin-top:14px;padding:12px 16px;border-radius:8px;font-size:14px;font-weight:500;display:none}
+  .quiz-result.show{display:block}
+  .quiz-result.pass{background:rgba(61,184,138,0.12);border:1px solid var(--green);color:var(--green)}
+  .quiz-result.fail{background:rgba(224,82,82,0.1);border:1px solid var(--red);color:var(--red)}
+  .nav-footer{display:flex;justify-content:space-between;align-items:center;margin-top:48px;padding-top:24px;border-top:1px solid var(--border)}
+  .nav-btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transition:all 0.15s}
+  .nav-btn.primary{background:var(--cyan);color:var(--bg)}
+  .nav-btn.secondary{background:var(--panel2);border:1px solid var(--border);color:var(--text)}
+  @media(max-width:768px){.sidebar{display:none}.main{padding:20px 18px}.fp-grid{grid-template-columns:1fr}}
+
+/* CyberSA clean research theme */
+:root{--bg:#ffffff;--panel:#ffffff;--panel2:#FAF9FB;--border:#E4E2EE;--cyan:#4C5FD5;--cyan-dim:#C8C5E8;--gold:#FF8C42;--red:#D95C5C;--green:#2E9B6F;--text:#22213A;--muted:#6B6B85;--white:#22213A}
+body{background:#fff;color:#22213A}.topbar{background:#fff;border-bottom:1px solid #E4E2EE}.topbar-brand .logo{background:#4C5FD5;color:#fff}.topbar-brand .name,.module-title,.section-title,.quiz-title,.example-card .ex-title{color:#22213A}.topbar-brand .sub,.topbar-right,.module-meta,.section p,.check-list li,.highlight p,.example-card p{color:#6B6B85}.topbar-right .student{color:#4C5FD5}.sidebar{background:#FAF9FB;border-right:1px solid #E4E2EE}.sidebar-module:hover,.topic-link:hover{background:#EDEAFB;color:#22213A}.sidebar-module.active{background:#EDEAFB;color:#4C5FD5;border-left-color:#4C5FD5}.topic-link.active{color:#4C5FD5}.dot{background:#D9D7E4}.module-badge{background:#EDEAFB;color:#4C5FD5;border-color:#D8D4F0}.progress-wrap,.example-card,.quiz-box,.highlight,.nav-btn.secondary{background:#FAF9FB;border-color:#E4E2EE}.progress-bar{background:#E4E2EE}.progress-fill{background:#4C5FD5}.section-tag,.highlight-title{color:#4C5FD5}.highlight.warning .highlight-title{color:#FF8C42}.highlight.danger .highlight-title{color:#D95C5C}.highlight.success .highlight-title{color:#2E9B6F}.option{background:#fff;border-color:#E4E2EE;color:#22213A}.option:hover{border-color:#C8C5E8;background:#FAF9FB}.quiz-btn,.nav-btn.primary{background:#4C5FD5;color:#fff}.nav-btn.secondary{color:#22213A}.step.active{color:#4C5FD5}.step-divider{background:#E4E2EE}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="topbar-brand" href="index.html">
+    <div class="logo">CS</div>
+    <span class="brand-name">CyberSA Learn</span>
+    <span class="brand-sub">| UP COS700</span>
+  </a>
+  <div class="topbar-right">
+    <span></span>
+    <span class="student"></span>
+  </div>
+</div>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Modules</div>
+      <a class="sidebar-module" href="module1.html"><span class="mod-num">Module 1</span>Phishing &amp; Social Engineering</a>
+      <a class="sidebar-module" href="module2.html"><span class="mod-num">Module 2</span>Cybercrimes Act &amp; POPIA</a>
+      <a class="sidebar-module" href="module3.html"><span class="mod-num">Module 3</span>Password Security &amp; Auth</a>
+      <a class="sidebar-module active" href="module4.html"><span class="mod-num">Module 4</span>Safe Internet &amp; Social Media</a>
+      <a class="sidebar-module" href="module5.html"><span class="mod-num">Module 5</span>Cyber Attack Awareness</a>
+    </div>
+    <hr class="sidebar-divider">
+    <div class="sidebar-section"><div class="sidebar-label">This Module</div></div>
+    <div class="topics-nav">
+      <a class="topic-link active" href="#intro"><div class="dot"></div>Introduction</a>
+      <a class="topic-link" href="#footprint"><div class="dot"></div>Digital Footprint</a>
+      <a class="topic-link" href="#privacy"><div class="dot"></div>Privacy Settings</a>
+      <a class="topic-link" href="#cyberbullying"><div class="dot"></div>Cyberbullying &amp; the Law</a>
+      <a class="topic-link" href="#quiz"><div class="dot"></div>Knowledge Check</a>
+    </div>
+  </nav>
+  <main class="main">
+    <div class="module-badge">Module 4 of 5</div>
+    <h1 class="module-title">Safe Internet &amp; Social Media Use</h1>
+    <div class="module-meta"><span>⏱ 2-3 hours</span><span>📚 Beginner</span><span>📱 Social Media</span><span>📋 10 Assessment Questions</span></div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Assessment Score</span><span>Not assessed</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+    </div>
+
+    <section class="section" id="intro">
+      <div class="section-tag">Introduction</div>
+      <h2 class="section-title">Your Online Presence Has Real Consequences</h2>
+      <p>South African students spend an average of 3 to 4 hours per day on social media. Every post, photo, location tag, and comment contributes to a digital profile that employers, universities, and attackers can access.</p>
+      <p>This module is about understanding and controlling that profile - protecting yourself legally, professionally, and personally in the South African online environment.</p>
+      <div class="highlight warning">
+        <div class="hl-title">Graduate Job Market Reality</div>
+        <p>A 2024 survey found that over 70% of South African employers check job applicants' social media profiles before making hiring decisions. What you post today can affect your career in 2026.</p>
+      </div>
+    </section>
+
+    <section class="section" id="footprint">
+      <div class="section-tag">Topic 1</div>
+      <h2 class="section-title">Your Digital Footprint</h2>
+      <p>A digital footprint is the trail of data you leave behind whenever you use the internet. It exists in two forms:</p>
+      <div class="footprint-visual">
+        <div class="fp-title">Types of Digital Footprint</div>
+        <div class="fp-grid">
+          <div class="fp-item active-fp">
+            <div class="fp-type">Active Footprint</div>
+            <p>Data you intentionally share: posts, photos, comments, profile information, messages you send.</p>
+          </div>
+          <div class="fp-item passive-fp">
+            <div class="fp-type">Passive Footprint</div>
+            <p>Data collected without you actively sharing it: websites visited, location data, browsing history, app usage patterns.</p>
+          </div>
+        </div>
+      </div>
+      <p>Your footprint is permanent. Even deleted posts may have been screenshotted, cached by Google, or archived. Before posting anything, ask: would I be comfortable if my future employer, my supervisor Prof Eloff, or my family saw this?</p>
+      <div class="highlight success">
+        <div class="hl-title">Audit Yourself</div>
+        <p>Google your own name right now. Look at what appears. Check your Facebook, Instagram, LinkedIn, and TikTok profiles from a public (logged out) view. This is what employers see.</p>
+      </div>
+    </section>
+
+    <section class="section" id="privacy">
+      <div class="section-tag">Topic 2</div>
+      <h2 class="section-title">Privacy Settings - Practical Checklist</h2>
+      <p>Use this interactive checklist to audit your social media privacy. Click each item when you have completed it.</p>
+      <div class="audit-checklist">
+        <div class="audit-title">Your Privacy Audit</div>
+        <div class="audit-item" onclick="toggleCheck(this)">
+          <div class="audit-cb"></div>
+          Set Instagram account to Private (Settings → Privacy → Account Privacy)
+        </div>
+        <div class="audit-item" onclick="toggleCheck(this)">
+          <div class="audit-cb"></div>
+          Review Facebook "Who can see your posts" - set to Friends only
+        </div>
+        <div class="audit-item" onclick="toggleCheck(this)">
+          <div class="audit-cb"></div>
+          Turn off location tagging in photos on Instagram and Facebook
+        </div>
+        <div class="audit-item" onclick="toggleCheck(this)">
+          <div class="audit-cb"></div>
+          Review and remove third-party apps connected to your social media accounts
+        </div>
+        <div class="audit-item" onclick="toggleCheck(this)">
+          <div class="audit-cb"></div>
+          Check TikTok privacy settings - set to private if you do not want public content
+        </div>
+        <div class="audit-item" onclick="toggleCheck(this)">
+          <div class="audit-cb"></div>
+          Remove your full date of birth from Facebook (visible to attackers for identity theft)
+        </div>
+        <div class="audit-item" onclick="toggleCheck(this)">
+          <div class="audit-cb"></div>
+          Check LinkedIn privacy - make sure your phone number is not publicly visible
+        </div>
+        <div class="audit-item" onclick="toggleCheck(this)">
+          <div class="audit-cb"></div>
+          Google your name and review what appears publicly
+        </div>
+      </div>
+
+      <div class="highlight danger">
+        <div class="hl-title">Never Share Publicly</div>
+        <p>Your ID number, student number, bank account details, physical address, daily routine or commute schedule, photos of your bank card, or anything that could help someone steal your identity or locate you physically.</p>
+      </div>
+    </section>
+
+    <section class="section" id="cyberbullying">
+      <div class="section-tag">Topic 3</div>
+      <h2 class="section-title">Cyberbullying and the Law in South Africa</h2>
+      <p>Cyberbullying is not just a social problem in South Africa - it is a criminal one. The Cybercrimes Act of 2021 specifically addresses online harassment and harmful data messages.</p>
+      <ul class="check-list">
+        <li><strong>Online harassment</strong> - Repeatedly sending unwanted messages or threats via any digital platform</li>
+        <li><strong>Cyberstalking</strong> - Monitoring someone's online activity or location without consent</li>
+        <li><strong>Non-consensual sharing of intimate images</strong> - Sharing private sexual images without permission (a serious offence under the Act)</li>
+        <li><strong>Doxxing</strong> - Publicly sharing someone's private personal information to cause harm</li>
+        <li><strong>Trolling that causes harm</strong> - Repeated targeting of a person with abusive or threatening content</li>
+      </ul>
+      <div class="highlight warning">
+        <div class="hl-title">If You Are Being Cyberbullied</div>
+        <p>Document everything by taking screenshots with timestamps. Block the person. Report to the platform. Report to your university's Student Support Services. If it involves threats, report to SAPS. You do not have to deal with this alone.</p>
+      </div>
+      <div class="highlight">
+        <div class="hl-title">UP Student Support</div>
+        <p>The University of Pretoria offers Student Counselling at 012 420 2333 and Student Wellness at studentwellness@up.ac.za. If you are experiencing cyberbullying related to your studies, you can also contact the Student Affairs office at studentaffairs@up.ac.za.</p>
+      </div>
+    </section>
+
+    <section class="section" id="quiz">
+      <div class="section-tag">Knowledge Check</div>
+      <h2 class="section-title">Test Your Understanding</h2>
+      <div class="quiz-box">
+        <div class="quiz-title">Module 4 Quiz</div>
+        <div class="quiz-sub">Answer all questions. You need 70% to pass.</div>
+        <div class="quiz-q">
+          <div class="q-text">1. What is the difference between an active and passive digital footprint?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q1" value="a"> Active is what you post intentionally; passive is data collected about you without active sharing</label>
+            <label class="option"><input type="radio" name="q1" value="b"> Active is illegal; passive is legal</label>
+            <label class="option"><input type="radio" name="q1" value="c"> Active happens on phones; passive happens on computers</label>
+            <label class="option"><input type="radio" name="q1" value="d"> There is no difference - all digital footprints are the same</label>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <div class="q-text">2. You tag a photo of yourself at a restaurant on Instagram with your location. What risk does this create?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q2" value="a"> None - location tagging is safe</label>
+            <label class="option"><input type="radio" name="q2" value="b"> It reveals your physical location and daily patterns to potentially anyone who can see your profile</label>
+            <label class="option"><input type="radio" name="q2" value="c"> It uses too much data</label>
+            <label class="option"><input type="radio" name="q2" value="d"> It violates Instagram's terms of service</label>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <div class="q-text">3. Under the Cybercrimes Act 2021, sharing intimate images of someone without their consent is:</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q3" value="a"> Only illegal if the person requests it be removed</label>
+            <label class="option"><input type="radio" name="q3" value="b"> A criminal offence</label>
+            <label class="option"><input type="radio" name="q3" value="c"> Only illegal on certain platforms</label>
+            <label class="option"><input type="radio" name="q3" value="d"> Not covered by South African law</label>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <div class="q-text">4. A South African employer asks to see your social media profiles during the hiring process. This is:</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q4" value="a"> Illegal - employers cannot check social media</label>
+            <label class="option"><input type="radio" name="q4" value="b"> Common practice - over 70% of SA employers do this</label>
+            <label class="option"><input type="radio" name="q4" value="c"> Only allowed for government positions</label>
+            <label class="option"><input type="radio" name="q4" value="d"> A violation of POPIA</label>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <div class="q-text">5. You are being harassed by someone on WhatsApp and Instagram. What is the correct sequence of steps?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q5" value="a"> Respond aggressively to deter them</label>
+            <label class="option"><input type="radio" name="q5" value="b"> Screenshot evidence, block the person, report to the platforms, and report to SAPS if threats are made</label>
+            <label class="option"><input type="radio" name="q5" value="c"> Delete your social media accounts</label>
+            <label class="option"><input type="radio" name="q5" value="d"> Wait to see if it stops on its own</label>
+          </div>
+        </div>
+        <button class="quiz-btn" onclick="checkQuiz()">Submit Answers</button>
+        <div class="quiz-result" id="quiz-result"></div>
+      </div>
+    </section>
+
+    <div class="nav-footer">
+      <a class="nav-btn secondary" href="module3.html">← Password Security</a>
+      <a class="nav-btn primary" href="module5.html">Next: Cyber Attack Awareness →</a>
+    </div>
+  </main>
+</div>
+<script>
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+  const cb = el.querySelector('.audit-cb');
+  cb.innerHTML = el.classList.contains('checked') ? '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+}
+function checkQuiz() {
+  const answers={q1:'a',q2:'b',q3:'b',q4:'b',q5:'b'};
+  let score=0;
+  for(const[q,correct]of Object.entries(answers)){
+    const selected=document.querySelector(`input[name="${q}"]:checked`);
+    document.querySelectorAll(`input[name="${q}"]`).forEach(o=>o.parentElement.classList.remove('correct','wrong'));
+    if(selected){if(selected.value===correct){selected.parentElement.classList.add('correct');score++;}else{selected.parentElement.classList.add('wrong');document.querySelector(`input[name="${q}"][value="${correct}"]`).parentElement.classList.add('correct');}}
+    else{document.querySelector(`input[name="${q}"][value="${correct}"]`).parentElement.classList.add('correct');}
+  }
+  const pct=Math.round((score/5)*100);
+  const r=document.getElementById('quiz-result');
+  r.className='quiz-result show '+(pct>=70?'pass':'fail');
+  r.textContent=pct>=70?`✓ Well done! You scored ${score}/5 (${pct}%). Passed!`:`✗ You scored ${score}/5 (${pct}%). Review above and try again.`;
+}
+</script>
+<script src="app.js"></script></body>
+</html>

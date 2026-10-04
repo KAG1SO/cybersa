@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 3: Password Security & Authentication | CyberSA Learn</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0F1923;--panel:#162232;--panel2:#1C2D42;--border:#243548;--cyan:#00C2CB;--cyan-dim:#007A82;--gold:#F5A623;--red:#E05252;--green:#3DB88A;--text:#E4EBF2;--muted:#7A95B0;--white:#FFFFFF}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+  .topbar{background:var(--panel);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .topbar-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+  .logo{width:32px;height:32px;background:var(--cyan);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--bg)}
+  .brand-name{font-weight:700;font-size:16px;color:var(--white)}
+  .brand-sub{font-size:11px;color:var(--muted);margin-left:4px}
+  .topbar-right{font-size:13px;color:var(--muted);display:flex;gap:16px;align-items:center}
+  .student{color:var(--cyan);font-weight:500}
+  .layout{display:flex;flex:1}
+  .sidebar{width:260px;min-width:260px;background:var(--panel);border-right:1px solid var(--border);padding:24px 0;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto}
+  .sidebar-section{padding:0 20px 16px}
+  .sidebar-label{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+  .sidebar-module{display:block;padding:10px 14px;border-radius:8px;text-decoration:none;font-size:13px;color:var(--muted);margin-bottom:2px}
+  .sidebar-module:hover{background:var(--panel2);color:var(--text)}
+  .sidebar-module.active{background:rgba(0,194,203,0.12);color:var(--cyan);font-weight:500;border-left:3px solid var(--cyan)}
+  .mod-num{font-size:10px;display:block;margin-bottom:2px}
+  .sidebar-divider{border:none;border-top:1px solid var(--border);margin:12px 20px}
+  .topics-nav{padding:0 20px}
+  .topic-link{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;text-decoration:none;font-size:12.5px;color:var(--muted);margin-bottom:2px}
+  .topic-link:hover{background:var(--panel2);color:var(--text)}
+  .topic-link.active{color:var(--cyan)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--border);flex-shrink:0}
+  .topic-link.active .dot{background:var(--cyan)}
+  .main{flex:1;padding:32px 40px;max-width:860px}
+  .module-badge{display:inline-flex;align-items:center;background:rgba(0,194,203,0.12);color:var(--cyan);border:1px solid var(--cyan-dim);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;margin-bottom:16px}
+  .module-title{font-size:28px;font-weight:700;color:var(--white);line-height:1.3;margin-bottom:10px}
+  .module-meta{display:flex;gap:20px;font-size:13px;color:var(--muted);margin-bottom:24px;flex-wrap:wrap}
+  .progress-wrap{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:32px}
+  .progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px}
+  .progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:3px}
+  .section{margin-bottom:40px}
+  .section-tag{font-size:11px;font-weight:600;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+  .section-title{font-size:20px;font-weight:700;color:var(--white);margin-bottom:14px}
+  .section p{font-size:14.5px;line-height:1.75;color:var(--text);margin-bottom:14px;max-width:72ch}
+  .highlight{background:var(--panel2);border:1px solid var(--border);border-left:4px solid var(--cyan);border-radius:8px;padding:16px 20px;margin:20px 0}
+  .highlight.warning{border-left-color:var(--gold)}
+  .highlight.danger{border-left-color:var(--red)}
+  .highlight.success{border-left-color:var(--green)}
+  .hl-title{font-size:12px;font-weight:600;color:var(--cyan);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+  .highlight.warning .hl-title{color:var(--gold)}
+  .highlight.danger .hl-title{color:var(--red)}
+  .highlight.success .hl-title{color:var(--green)}
+  .highlight p{font-size:14px;color:var(--text);margin:0;max-width:100%}
+  .check-list{list-style:none;margin:12px 0}
+  .check-list li{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--text);margin-bottom:8px;line-height:1.6}
+  .check-list li::before{content:"";width:18px;height:18px;min-width:18px;background:rgba(0,194,203,0.15);border:1px solid var(--cyan-dim);border-radius:4px;margin-top:2px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l3 3 5-5' stroke='%2300C2CB' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center}
+  /* Password strength meter */
+  .pw-demo{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:20px;margin:20px 0}
+  .pw-demo label{font-size:13px;color:var(--muted);display:block;margin-bottom:8px}
+  .pw-input{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none}
+  .pw-input:focus{border-color:var(--cyan-dim)}
+  .strength-bar{height:6px;border-radius:3px;margin-top:10px;transition:all 0.3s;background:var(--border)}
+  .strength-label{font-size:12px;margin-top:6px;color:var(--muted)}
+  .pw-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0}
+  .pw-card{background:var(--panel2);border-radius:8px;padding:14px;border:1px solid var(--border)}
+  .pw-card .pw-label{font-size:11px;color:var(--muted);margin-bottom:6px}
+  .pw-card .pw-val{font-size:13px;font-family:monospace;color:var(--text)}
+  .pw-card .pw-score{font-size:12px;margin-top:6px;font-weight:600}
+  .pw-card.weak .pw-score{color:var(--red)}
+  .pw-card.medium .pw-score{color:var(--gold)}
+  .pw-card.strong .pw-score{color:var(--green)}
+  /* MFA types */
+  .mfa-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+  .mfa-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:16px}
+  .mfa-card .mfa-icon{font-size:24px;margin-bottom:8px}
+  .mfa-card .mfa-name{font-size:14px;font-weight:600;color:var(--white);margin-bottom:4px}
+  .mfa-card .mfa-desc{font-size:13px;color:var(--muted);line-height:1.5}
+  .mfa-card .mfa-score{font-size:11px;font-weight:600;margin-top:8px;padding:3px 8px;border-radius:4px;display:inline-block}
+  .mfa-card.best .mfa-score{background:rgba(61,184,138,0.15);color:var(--green)}
+  .mfa-card.good .mfa-score{background:rgba(0,194,203,0.15);color:var(--cyan)}
+  .mfa-card.ok .mfa-score{background:rgba(245,166,35,0.15);color:var(--gold)}
+  .quiz-box{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:24px;margin:28px 0}
+  .quiz-title{font-size:16px;font-weight:700;color:var(--white);margin-bottom:6px}
+  .quiz-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+  .quiz-q{margin-bottom:22px}
+  .q-text{font-size:14.5px;font-weight:500;color:var(--text);margin-bottom:12px}
+  .options{display:flex;flex-direction:column;gap:8px}
+  .option{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--panel);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:14px;color:var(--text);transition:all 0.15s;user-select:none}
+  .option:hover{border-color:var(--cyan-dim);background:rgba(0,194,203,0.05)}
+  .option.correct{border-color:var(--green);background:rgba(61,184,138,0.08);color:var(--green)}
+  .option.wrong{border-color:var(--red);background:rgba(224,82,82,0.08);color:var(--red)}
+  .option input[type=radio]{accent-color:var(--cyan);width:16px;height:16px}
+  .quiz-btn{margin-top:16px;padding:10px 24px;background:var(--cyan);color:var(--bg);border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+  .quiz-result{margin-top:14px;padding:12px 16px;border-radius:8px;font-size:14px;font-weight:500;display:none}
+  .quiz-result.show{display:block}
+  .quiz-result.pass{background:rgba(61,184,138,0.12);border:1px solid var(--green);color:var(--green)}
+  .quiz-result.fail{background:rgba(224,82,82,0.1);border:1px solid var(--red);color:var(--red)}
+  .nav-footer{display:flex;justify-content:space-between;align-items:center;margin-top:48px;padding-top:24px;border-top:1px solid var(--border)}
+  .nav-btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transition:all 0.15s}
+  .nav-btn.primary{background:var(--cyan);color:var(--bg)}
+  .nav-btn.primary:hover{opacity:0.9}
+  .nav-btn.secondary{background:var(--panel2);border:1px solid var(--border);color:var(--text)}
+  @media(max-width:768px){.sidebar{display:none}.main{padding:20px 18px}.pw-grid{grid-template-columns:1fr}.mfa-grid{grid-template-columns:1fr}}
+
+/* CyberSA clean research theme */
+:root{--bg:#ffffff;--panel:#ffffff;--panel2:#FAF9FB;--border:#E4E2EE;--cyan:#4C5FD5;--cyan-dim:#C8C5E8;--gold:#FF8C42;--red:#D95C5C;--green:#2E9B6F;--text:#22213A;--muted:#6B6B85;--white:#22213A}
+body{background:#fff;color:#22213A}.topbar{background:#fff;border-bottom:1px solid #E4E2EE}.topbar-brand .logo{background:#4C5FD5;color:#fff}.topbar-brand .name,.module-title,.section-title,.quiz-title,.example-card .ex-title{color:#22213A}.topbar-brand .sub,.topbar-right,.module-meta,.section p,.check-list li,.highlight p,.example-card p{color:#6B6B85}.topbar-right .student{color:#4C5FD5}.sidebar{background:#FAF9FB;border-right:1px solid #E4E2EE}.sidebar-module:hover,.topic-link:hover{background:#EDEAFB;color:#22213A}.sidebar-module.active{background:#EDEAFB;color:#4C5FD5;border-left-color:#4C5FD5}.topic-link.active{color:#4C5FD5}.dot{background:#D9D7E4}.module-badge{background:#EDEAFB;color:#4C5FD5;border-color:#D8D4F0}.progress-wrap,.example-card,.quiz-box,.highlight,.nav-btn.secondary{background:#FAF9FB;border-color:#E4E2EE}.progress-bar{background:#E4E2EE}.progress-fill{background:#4C5FD5}.section-tag,.highlight-title{color:#4C5FD5}.highlight.warning .highlight-title{color:#FF8C42}.highlight.danger .highlight-title{color:#D95C5C}.highlight.success .highlight-title{color:#2E9B6F}.option{background:#fff;border-color:#E4E2EE;color:#22213A}.option:hover{border-color:#C8C5E8;background:#FAF9FB}.quiz-btn,.nav-btn.primary{background:#4C5FD5;color:#fff}.nav-btn.secondary{color:#22213A}.step.active{color:#4C5FD5}.step-divider{background:#E4E2EE}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="topbar-brand" href="index.html">
+    <div class="logo">CS</div>
+    <span class="brand-name">CyberSA Learn</span>
+    <span class="brand-sub">| UP COS700</span>
+  </a>
+  <div class="topbar-right">
+    <span></span>
+    <span class="student"></span>
+  </div>
+</div>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Modules</div>
+      <a class="sidebar-module" href="module1.html"><span class="mod-num">Module 1</span>Phishing &amp; Social Engineering</a>
+      <a class="sidebar-module" href="module2.html"><span class="mod-num">Module 2</span>Cybercrimes Act &amp; POPIA</a>
+      <a class="sidebar-module active" href="module3.html"><span class="mod-num">Module 3</span>Password Security &amp; Auth</a>
+      <a class="sidebar-module" href="module4.html"><span class="mod-num">Module 4</span>Safe Internet &amp; Social Media</a>
+      <a class="sidebar-module" href="module5.html"><span class="mod-num">Module 5</span>Cyber Attack Awareness</a>
+    </div>
+    <hr class="sidebar-divider">
+    <div class="sidebar-section"><div class="sidebar-label">This Module</div></div>
+    <div class="topics-nav">
+      <a class="topic-link active" href="#intro"><div class="dot"></div>Introduction</a>
+      <a class="topic-link" href="#passwords"><div class="dot"></div>Strong Passwords</a>
+      <a class="topic-link" href="#mfa"><div class="dot"></div>Multi-Factor Auth</a>
+      <a class="topic-link" href="#managers"><div class="dot"></div>Password Managers</a>
+      <a class="topic-link" href="#quiz"><div class="dot"></div>Knowledge Check</a>
+    </div>
+  </nav>
+  <main class="main">
+    <div class="module-badge">Module 3 of 5</div>
+    <h1 class="module-title">Password Security &amp; Authentication</h1>
+    <div class="module-meta"><span>⏱ 2-3 hours</span><span>📚 Beginner</span><span>🔐 Practical</span><span>📋 10 Assessment Questions</span></div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Assessment Score</span><span>Not assessed</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+    </div>
+
+    <section class="section" id="intro">
+      <div class="section-tag">Introduction</div>
+      <h2 class="section-title">Your First Line of Defence</h2>
+      <p>Weak or reused passwords are one of the leading causes of cybersecurity breaches globally. In South Africa, credential theft is a major attack vector - attackers buy stolen username and password combinations from data breaches and try them across multiple platforms until something works.</p>
+      <p>As an IT student, you likely have accounts on your university portal, email, GitHub, LinkedIn, bank apps, and dozens of other platforms. If any one of those uses the same weak password, all of them are at risk.</p>
+      <div class="highlight warning">
+        <div class="hl-title">SA Stat</div>
+        <p>According to the Fortinet 2024 Cybersecurity Skills Gap Report, weak authentication remains one of the top three causes of breaches in South Africa. And yet most people still use passwords like "Password123" or their date of birth.</p>
+      </div>
+    </section>
+
+    <section class="section" id="passwords">
+      <div class="section-tag">Topic 1</div>
+      <h2 class="section-title">Creating Strong Passwords</h2>
+      <p>Not all passwords are created equal. Let's look at what makes a password weak, medium, or strong.</p>
+
+      <div class="pw-grid">
+        <div class="pw-card weak">
+          <div class="pw-label">Weak</div>
+          <div class="pw-val">Kagiso2001</div>
+          <div class="pw-score">Cracked in seconds</div>
+        </div>
+        <div class="pw-card medium">
+          <div class="pw-label">Medium</div>
+          <div class="pw-val">K@g1s0_2001!</div>
+          <div class="pw-score">Cracked in hours</div>
+        </div>
+        <div class="pw-card strong">
+          <div class="pw-label">Strong (Passphrase)</div>
+          <div class="pw-val">Sunset-Bicycle-River-Mango</div>
+          <div class="pw-score">Cracked in centuries</div>
+        </div>
+      </div>
+
+      <h3 style="font-size:16px;font-weight:600;color:var(--white);margin:24px 0 12px;">Try it yourself</h3>
+      <div class="pw-demo">
+        <label>Type a password to check its strength:</label>
+        <input class="pw-input" type="text" id="pw-input" placeholder="Type a password..." oninput="checkStrength(this.value)">
+        <div class="strength-bar" id="strength-bar"></div>
+        <div class="strength-label" id="strength-label">Start typing to see strength</div>
+      </div>
+
+      <h3 style="font-size:16px;font-weight:600;color:var(--white);margin:24px 0 12px;">The Passphrase Technique</h3>
+      <p>The best passwords are actually passphrases - four or more random words strung together. They are long enough to resist brute force but easy enough to remember.</p>
+      <ul class="check-list">
+        <li>Pick four unrelated words: <strong>Sunset · Bicycle · River · Mango</strong></li>
+        <li>Add a separator: <strong>Sunset-Bicycle-River-Mango</strong></li>
+        <li>This is 29 characters long and would take modern computers centuries to crack</li>
+        <li>Compare to "P@ssw0rd!" which is only 9 characters and cracked in under an hour</li>
+      </ul>
+
+      <div class="highlight danger">
+        <div class="hl-title">Never Use</div>
+        <p>Your name, student number, date of birth, "password", "123456", your university name, or any word that appears in a dictionary. These are the first things attackers try.</p>
+      </div>
+    </section>
+
+    <section class="section" id="mfa">
+      <div class="section-tag">Topic 2</div>
+      <h2 class="section-title">Multi-Factor Authentication (MFA)</h2>
+      <p>Even a strong password can be stolen through phishing or a data breach. MFA adds a second verification step so that even if someone has your password, they still cannot log in without the second factor.</p>
+      <p>Think of it like your bank card: you need both the card (something you have) and your PIN (something you know). MFA works the same way for online accounts.</p>
+
+      <div class="mfa-grid">
+        <div class="mfa-card best">
+          <div class="mfa-icon">🔑</div>
+          <div class="mfa-name">Hardware Key (e.g. YubiKey)</div>
+          <div class="mfa-desc">Physical device you plug in or tap. Nearly impossible to phish.</div>
+          <div class="mfa-score">Most Secure</div>
+        </div>
+        <div class="mfa-card best">
+          <div class="mfa-icon">📱</div>
+          <div class="mfa-name">Authenticator App</div>
+          <div class="mfa-desc">Google Authenticator or Microsoft Authenticator generates a new 6-digit code every 30 seconds.</div>
+          <div class="mfa-score">Highly Secure</div>
+        </div>
+        <div class="mfa-card ok">
+          <div class="mfa-icon">💬</div>
+          <div class="mfa-name">SMS OTP</div>
+          <div class="mfa-desc">One-time code sent to your phone. Better than nothing but vulnerable to SIM swap attacks.</div>
+          <div class="mfa-score">Use If No Other Option</div>
+        </div>
+        <div class="mfa-card good">
+          <div class="mfa-icon">👆</div>
+          <div class="mfa-name">Biometrics</div>
+          <div class="mfa-desc">Fingerprint or face ID. Convenient and secure for device login.</div>
+          <div class="mfa-score">Good for Devices</div>
+        </div>
+      </div>
+
+      <div class="highlight warning">
+        <div class="hl-title">SA Warning: SIM Swap Attacks</div>
+        <p>SIM swap fraud is particularly common in South Africa. Attackers convince your mobile network to transfer your number to their SIM card, then receive your SMS OTPs. This is why authenticator apps are safer than SMS for MFA - your authenticator codes stay on your device, not your phone number.</p>
+      </div>
+
+      <div class="highlight success">
+        <div class="hl-title">Enable MFA Now</div>
+        <p>Go to your Google Account → Security → 2-Step Verification and enable it using Google Authenticator. Also enable it on your UP email, GitHub, LinkedIn, and banking apps. This single step dramatically reduces your risk of account compromise.</p>
+      </div>
+    </section>
+
+    <section class="section" id="managers">
+      <div class="section-tag">Topic 3</div>
+      <h2 class="section-title">Password Managers</h2>
+      <p>You cannot realistically create and remember a unique strong password for every account you have. That is what password managers are for. They store all your passwords securely, encrypted by one master password that only you know.</p>
+      <ul class="check-list">
+        <li><strong>Bitwarden</strong> - Free, open-source, and audited. Recommended for students. Available at bitwarden.com</li>
+        <li><strong>1Password</strong> - Paid but excellent. Many companies provide it to employees</li>
+        <li><strong>KeePassXC</strong> - Free, open-source, stores everything locally on your device</li>
+      </ul>
+      <div class="highlight">
+        <div class="hl-title">Have You Been Pwned?</div>
+        <p>Go to haveibeenpwned.com and enter your email address. This free tool by security researcher Troy Hunt checks if your email and password have appeared in any known data breaches. If it has, change those passwords immediately.</p>
+      </div>
+    </section>
+
+    <section class="section" id="quiz">
+      <div class="section-tag">Knowledge Check</div>
+      <h2 class="section-title">Test Your Understanding</h2>
+      <div class="quiz-box">
+        <div class="quiz-title">Module 3 Quiz</div>
+        <div class="quiz-sub">Answer all questions. You need 70% to pass.</div>
+        <div class="quiz-q">
+          <div class="q-text">1. Which of the following is the strongest password?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q1" value="a"> P@ssw0rd!</label>
+            <label class="option"><input type="radio" name="q1" value="b"> Kagiso2001</label>
+            <label class="option"><input type="radio" name="q1" value="c"> Sunset-Bicycle-River-Mango</label>
+            <label class="option"><input type="radio" name="q1" value="d"> 123456789!</label>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <div class="q-text">2. Why is SMS-based MFA less secure than an authenticator app in South Africa?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q2" value="a"> SMS messages use older technology</label>
+            <label class="option"><input type="radio" name="q2" value="b"> SMS OTPs are vulnerable to SIM swap attacks where attackers transfer your number to their SIM</label>
+            <label class="option"><input type="radio" name="q2" value="c"> Authenticator apps are faster</label>
+            <label class="option"><input type="radio" name="q2" value="d"> SMS costs money to receive</label>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <div class="q-text">3. What does a password manager do?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q3" value="a"> Creates passwords automatically and shares them with websites</label>
+            <label class="option"><input type="radio" name="q3" value="b"> Stores all your passwords securely, encrypted by one master password</label>
+            <label class="option"><input type="radio" name="q3" value="c"> Sends your passwords to a cloud backup</label>
+            <label class="option"><input type="radio" name="q3" value="d"> Checks if your passwords meet company policy</label>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <div class="q-text">4. You discover via HaveIBeenPwned that your university email was in a data breach. What is your first step?</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q4" value="a"> Ignore it - data breaches happen all the time</label>
+            <label class="option"><input type="radio" name="q4" value="b"> Change the password on that account and anywhere else you used the same password</label>
+            <label class="option"><input type="radio" name="q4" value="c"> Delete the account</label>
+            <label class="option"><input type="radio" name="q4" value="d"> Report it to SAPS</label>
+          </div>
+        </div>
+        <div class="quiz-q">
+          <div class="q-text">5. True or False: A 29-character passphrase made of random words is generally stronger than a shorter complex password like "Tr0ub4dor&3".</div>
+          <div class="options">
+            <label class="option"><input type="radio" name="q5" value="true"> True - length is the primary driver of password strength</label>
+            <label class="option"><input type="radio" name="q5" value="false"> False - special characters are what matter most</label>
+          </div>
+        </div>
+        <button class="quiz-btn" onclick="checkQuiz()">Submit Answers</button>
+        <div class="quiz-result" id="quiz-result"></div>
+      </div>
+    </section>
+
+    <div class="nav-footer">
+      <a class="nav-btn secondary" href="module2.html">← Cybercrimes Act &amp; POPIA</a>
+      <a class="nav-btn primary" href="module4.html">Next: Safe Internet →</a>
+    </div>
+  </main>
+</div>
+<script>
+function checkStrength(pw) {
+  const bar = document.getElementById('strength-bar');
+  const label = document.getElementById('strength-label');
+  if (!pw) { bar.style.width='0'; bar.style.background='var(--border)'; label.textContent='Start typing to see strength'; return; }
+  let score = 0;
+  if (pw.length >= 12) score++;
+  if (pw.length >= 20) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  if (pw.split(' ').length >= 3 || pw.split('-').length >= 3) score += 2;
+  const pct = Math.min(100, (score / 6) * 100);
+  bar.style.width = pct + '%';
+  bar.style.transition = 'width 0.3s, background 0.3s';
+  if (pct < 40) { bar.style.background = 'var(--red)'; label.style.color = 'var(--red)'; label.textContent = 'Weak - easy to crack'; }
+  else if (pct < 70) { bar.style.background = 'var(--gold)'; label.style.color = 'var(--gold)'; label.textContent = 'Medium - could be stronger'; }
+  else { bar.style.background = 'var(--green)'; label.style.color = 'var(--green)'; label.textContent = 'Strong - good password!'; }
+}
+function checkQuiz() {
+  const answers = {q1:'c',q2:'b',q3:'b',q4:'b',q5:'true'};
+  let score=0;
+  for(const[q,correct]of Object.entries(answers)){
+    const selected=document.querySelector(`input[name="${q}"]:checked`);
+    document.querySelectorAll(`input[name="${q}"]`).forEach(o=>o.parentElement.classList.remove('correct','wrong'));
+    if(selected){if(selected.value===correct){selected.parentElement.classList.add('correct');score++;}else{selected.parentElement.classList.add('wrong');document.querySelector(`input[name="${q}"][value="${correct}"]`).parentElement.classList.add('correct');}}
+    else{document.querySelector(`input[name="${q}"][value="${correct}"]`).parentElement.classList.add('correct');}
+  }
+  const pct=Math.round((score/5)*100);
+  const r=document.getElementById('quiz-result');
+  r.className='quiz-result show '+(pct>=70?'pass':'fail');
+  r.textContent=pct>=70?`✓ Well done! You scored ${score}/5 (${pct}%). Passed!`:`✗ You scored ${score}/5 (${pct}%). Review above and try again.`;
+}
+</script>
+<script src="app.js"></script></body>
+</html>
