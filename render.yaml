@@ -9,16 +9,6 @@ services:
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: cybersa-postgres
-          property: connectionString
+        sync: false
       - key: CYBERSA_RESEARCHER_PASSWORD
         sync: false
-
-databases:
-  - name: cybersa-postgres
-    databaseName: cybersa
-    user: cybersa_app
-    region: frankfurt
-    plan: 0.1c-256mb
-    diskSizeGB: 1

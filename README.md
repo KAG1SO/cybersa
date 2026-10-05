@@ -14,7 +14,7 @@ Local development uses `cybersa.db` (SQLite). The local database is intentionall
 
 ## Deploy on Render
 
-The `render.yaml` Blueprint creates a Frankfurt web service and a managed PostgreSQL database. Set a strong `CYBERSA_RESEARCHER_PASSWORD` when Render prompts during Blueprint setup. The service requires this secret in production and connects to PostgreSQL through `DATABASE_URL`; local development continues to use SQLite.
+The `render.yaml` Blueprint creates a Frankfurt web service. Create a PostgreSQL database with your chosen provider, then set its connection string as `DATABASE_URL` in the Render service environment. Set a strong `CYBERSA_RESEARCHER_PASSWORD` there as well. Local development continues to use SQLite.
 
 Build command: `pip install -r requirements.txt`
 

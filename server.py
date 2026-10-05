@@ -172,8 +172,9 @@ class FeedbackIn(BaseModel):
 
 
 def next_participant(con):
+    participant_pattern = "CS-%%" if DATABASE_URL else "CS-%"
     row = con.execute(
-        "SELECT participant_id FROM learners WHERE participant_id LIKE 'CS-%' ORDER BY id DESC LIMIT 1"
+        f"SELECT participant_id FROM learners WHERE participant_id LIKE '{participant_pattern}' ORDER BY id DESC LIMIT 1"
     ).fetchone()
     n = 1
     if row:
