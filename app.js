@@ -34,7 +34,7 @@
       #cs-modal h2{color:#22213A;margin:0 0 8px;font-size:22px}#cs-modal p{color:#6B6B85;font-size:13px;line-height:1.6;margin:0 0 18px}
       #cs-modal label{display:block;color:#22213A;font-size:12px;font-weight:600;margin:12px 0 6px}#cs-modal input{width:100%;padding:11px 12px;border-radius:8px;border:1px solid #E4E2EE;background:#fff;color:#22213A;font:inherit}
       #cs-modal button,#cs-recovery button{width:100%;margin-top:18px;padding:11px;border:0;border-radius:8px;background:#4C5FD5;color:#fff;font-weight:700;cursor:pointer}
-      #cs-modal .cs-switch{display:block;margin-top:14px;text-align:center;color:#4C5FD5;font-size:12px;cursor:pointer}#cs-recovery{position:fixed;inset:0;background:rgba(34,33,58,.28);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:10000;padding:18px}#cs-recovery .box{max-width:500px;width:100%;background:#fff;border:1px solid #E4E2EE;border-radius:16px;padding:28px;box-shadow:0 24px 70px rgba(34,33,58,.18)}#cs-recovery h2{margin:0 0 10px;color:#22213A}#cs-recovery p{color:#6B6B85;font-size:13px;line-height:1.6}#cs-recovery input{width:100%;margin-top:12px;padding:12px;border:1px solid #E4E2EE;border-radius:8px;font:700 18px monospace;letter-spacing:1px;color:#22213A}
+      #cs-modal .cs-switch{display:block;width:100%;margin-top:14px;padding:10px;text-align:center;color:#4C5FD5;font:600 13px Inter,sans-serif;background:#F5F4FF;border:1px solid #DCD8F2;border-radius:8px;cursor:pointer}#cs-modal .cs-switch:hover{background:#EDEAFB}#cs-recovery{position:fixed;inset:0;background:rgba(34,33,58,.28);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:10000;padding:18px}#cs-recovery .box{max-width:500px;width:100%;background:#fff;border:1px solid #E4E2EE;border-radius:16px;padding:28px;box-shadow:0 24px 70px rgba(34,33,58,.18)}#cs-recovery h2{margin:0 0 10px;color:#22213A}#cs-recovery p{color:#6B6B85;font-size:13px;line-height:1.6}#cs-recovery input{width:100%;margin-top:12px;padding:12px;border:1px solid #E4E2EE;border-radius:8px;font:700 18px monospace;letter-spacing:1px;color:#22213A}
       .cs-user{color:#4C5FD5;font-weight:600}.cs-feedback{margin:28px 0;padding:22px;background:#FAF9FB;border:1px solid #E4E2EE;border-radius:12px}.cs-feedback h3{margin:0 0 6px;color:#22213A}.cs-feedback p{color:#6B6B85;font-size:13px}
       .cs-feedback select,.cs-feedback textarea{width:100%;margin-top:8px;background:#fff;color:#22213A;border:1px solid #E4E2EE;border-radius:8px;padding:10px;font:inherit}.cs-feedback textarea{min-height:90px;resize:vertical}.cs-feedback button{margin-top:12px;padding:10px 18px;border:0;border-radius:7px;background:#4C5FD5;color:#fff;font-weight:700}
       .cs-user-menu{display:inline-flex;align-items:center;gap:10px}.cs-logout{border:1px solid #E4E2EE;background:#fff;color:#22213A;border-radius:7px;padding:7px 10px;font-size:11px;cursor:pointer}.cs-logout:hover{border-color:#C8C5E8;color:#4C5FD5}
@@ -46,7 +46,7 @@
     ensureStyles();
     if (document.getElementById('cs-modal')) return;
     const m = document.createElement('div'); m.id = 'cs-modal';
-    m.innerHTML = `<div class="box"><h2>Welcome to CyberSA Learn</h2><div id="cs-create-panel"><p>Create a new learner record to begin. You’ll receive a participant ID and a recovery code to save.</p><label>Name <span style="color:#6B6B85">(optional)</span></label><input id="cs-name" placeholder="Your name" autocomplete="name"><button id="cs-start">Create learner record</button><span class="cs-switch" id="cs-show-login">Already have a participant ID? Sign in</span></div><div id="cs-login-panel" style="display:none"><p>Enter your participant ID and recovery code to return to your learner record.</p><label>Participant ID</label><input id="cs-participant-id" placeholder="CS-0001" autocomplete="username"><label>Recovery code</label><input id="cs-recovery-code" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="one-time-code"><button id="cs-login">Sign in</button><span class="cs-switch" id="cs-show-create">Create a new learner record</span></div><p style="margin:20px 0 0;text-align:center"><a href="dashboard.html" style="color:#4C5FD5;font-size:13px;font-weight:600">Researcher sign in →</a></p></div>`;
+    m.innerHTML = `<div class="box"><h2>Welcome to CyberSA Learn</h2><div id="cs-create-panel"><p>New here? Create a learner record. You’ll receive a participant ID and recovery code to save.</p><label>Name <span style="color:#6B6B85">(optional)</span></label><input id="cs-name" placeholder="Your name" autocomplete="name"><button id="cs-start">Create learner record</button><button type="button" class="cs-switch" id="cs-show-login">Returning learner? Sign in with your participant ID</button></div><div id="cs-login-panel" style="display:none"><p>Enter the participant ID and recovery code you saved earlier to continue your existing learner record.</p><label>Participant ID</label><input id="cs-participant-id" placeholder="CS-0001" autocomplete="username"><label>Recovery code</label><input id="cs-recovery-code" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="one-time-code"><button id="cs-login">Sign in</button><button type="button" class="cs-switch" id="cs-show-create">New learner? Create a learner record</button></div><p style="margin:20px 0 0;text-align:center"><a href="dashboard.html" style="color:#4C5FD5;font-size:13px;font-weight:600">Researcher sign in →</a></p></div>`;
     document.body.appendChild(m);
     document.getElementById('cs-show-login').onclick = () => { document.getElementById('cs-create-panel').style.display='none'; document.getElementById('cs-login-panel').style.display='block'; };
     document.getElementById('cs-show-create').onclick = () => { document.getElementById('cs-login-panel').style.display='none'; document.getElementById('cs-create-panel').style.display='block'; };
@@ -91,7 +91,7 @@
   function showRecoveryCode(code, onContinue=()=>{}) {
     ensureStyles();
     const modal=document.createElement('div');modal.id='cs-recovery';
-    modal.innerHTML=`<div class="box"><h2>Save your recovery code</h2><p>This code lets you return to <strong>${esc(localStorage.getItem(USER_KEY))}</strong> and its saved progress. It is shown only now. Save it somewhere private; anyone with your participant ID and code can access this learner record.</p><input id="cs-recovery-value" value="${esc(code)}" readonly aria-label="Recovery code"><button id="cs-copy-code" type="button">Copy recovery code</button><button id="cs-saved-code" type="button">I’ve saved it — continue</button></div>`;
+    modal.innerHTML=`<div class="box"><h2>Save your recovery code</h2><p>This code lets you return to <strong>${esc(localStorage.getItem(USER_KEY))}</strong> and its saved progress. It is shown only now. Save it somewhere private; anyone with your participant ID and code can access this learner record.</p><input id="cs-recovery-value" value="${esc(code)}" readonly aria-label="Recovery code"><button id="cs-copy-code" type="button">Copy recovery code</button><button id="cs-saved-code" type="button">I’ve saved it. Continue</button></div>`;
     document.body.appendChild(modal);
     document.getElementById('cs-copy-code').onclick=async()=>{const field=document.getElementById('cs-recovery-value');try{await navigator.clipboard.writeText(code);document.getElementById('cs-copy-code').textContent='Copied';}catch{field.select();document.execCommand('copy');document.getElementById('cs-copy-code').textContent='Copied';}};
     document.getElementById('cs-saved-code').onclick=()=>{modal.remove();onContinue();};
@@ -115,9 +115,9 @@
       let wrap=e.querySelector('.cs-user-menu');
       if (!wrap) { wrap = document.createElement('span'); wrap.className = 'cs-user-menu'; e.appendChild(wrap); }
       if (wrap.querySelector('.cs-logout')) return;
-      const recovery = document.createElement('button'); recovery.className = 'cs-logout'; recovery.textContent = 'New recovery code';
+      const recovery = document.createElement('button'); recovery.className = 'cs-logout'; recovery.textContent = 'Replace recovery code';
       recovery.onclick = async () => {
-        if (!confirm('Create a new recovery code? Your old code will stop working.')) return;
+        if (!confirm(`Replace the recovery code for ${user.participant_id}? This keeps the same learner record and progress. The old code will stop working.`)) return;
         try { const result=await api('/recovery-code/rotate',{method:'POST',body:'{}'}); showRecoveryCode(result.recovery_code); }
         catch(e) { alert(e.message); }
       };
@@ -135,6 +135,28 @@
     const fill = document.querySelector('.progress-fill');
     if (label) label.textContent = score == null ? 'Not assessed' : `${score}%`;
     if (fill) fill.style.width = `${score == null ? 0 : Math.max(0, Math.min(100, score))}%`;
+  }
+
+  function showPostAssessmentNextStep(container) {
+    if (!container || document.getElementById('cs-post-assessment-next-step')) return;
+    const nextStep = document.createElement('section');
+    nextStep.id = 'cs-post-assessment-next-step';
+    nextStep.setAttribute('aria-labelledby', 'cs-post-assessment-title');
+    nextStep.style.cssText = 'margin:24px 0;padding:22px 24px;border:2px solid #4C5FD5;border-radius:14px;background:#F5F4FF';
+    nextStep.innerHTML = '<h2 id="cs-post-assessment-title" style="margin:0 0 7px;font-size:19px;color:#22213A">All five module checks passed. Take your post-assessment.</h2><p style="margin:0 0 15px;color:#6B6B85;line-height:1.6">You have completed the module knowledge checks. The final assessment is your next step.</p><a href="post-assessment.html" style="display:inline-block;padding:11px 16px;border-radius:8px;background:#4C5FD5;color:#fff;text-decoration:none;font-weight:700">Start post-assessment →</a>';
+    container.insertAdjacentElement('afterend', nextStep);
+  }
+
+  async function showPostAssessmentIfReady(user) {
+    if (!user) return;
+    try {
+      const saved = await api('/progress');
+      const scores = saved.assessment_scores || {};
+      const allPassed = ['M1', 'M2', 'M3', 'M4', 'M5'].every(id => Number(scores[id]) >= 70);
+      if (!allPassed) return;
+      if (page === 'index.html') showPostAssessmentNextStep(document.querySelector('.section-head'));
+      if (page === 'module5.html') showPostAssessmentNextStep(document.getElementById('quiz-result'));
+    } catch (e) { console.error('Could not check module assessment completion', e); }
   }
 
   async function trackModule(user) {
@@ -212,6 +234,8 @@
         showModuleAssessmentScore(percentage);
         try {
           await api('/attempts', {method:'POST', body:JSON.stringify({module_id:mod.id, score, total, percentage, answers:collectAnswers(), attempt_type:'knowledge_check'} )});
+          showFeedback();
+          if (mod.id === 'M5' && percentage >= 70) showPostAssessmentIfReady(await currentUser());
         }
         catch(e) { console.error(e); alert('Your quiz was displayed, but the research record could not be saved. Please check that the CyberSA server is running.'); }
       }, 50);
@@ -223,7 +247,7 @@
     ensureStyles();
     if (page === 'index.html' || mod || page === 'post-assessment.html') {
       const user = await currentUser();
-      if (!user) showLogin(); else { renderUser(user); ensureRecoveryCode(); trackModule(user); if (mod) trackTopics(); const timer=setInterval(()=>{if(patchQuiz()) clearInterval(timer)},100); }
+      if (!user) showLogin(); else { renderUser(user); ensureRecoveryCode(); trackModule(user); if (mod) trackTopics(); if (page === 'index.html' || page === 'module5.html') showPostAssessmentIfReady(user); const timer=setInterval(()=>{if(patchQuiz()) clearInterval(timer)},100); }
     }
     showResearcherError();
   }
