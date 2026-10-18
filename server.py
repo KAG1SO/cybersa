@@ -144,7 +144,7 @@ init_db()
 
 
 class LearnerCreate(BaseModel):
-    name: str | None = None
+    name: str = ""
 
 
 class LearnerLogin(BaseModel):
@@ -205,6 +205,9 @@ def researcher_guard(password: str | None):
 
 @app.post("/api/learners")
 def create_learner(payload: LearnerCreate):
+    name = payload.name.strip()
+    if not name:
+        raise HTTPException(400, "Please enter your name to create a learner record.")
     con = db()
     pid = next_participant(con)
     token = secrets.token_urlsafe(32)
@@ -212,11 +215,11 @@ def create_learner(payload: LearnerCreate):
     stamp = now()
     con.execute(
         "INSERT INTO learners(participant_id,name,auth_token,recovery_code_hash,created_at,last_seen_at) VALUES(?,?,?,?,?,?)",
-        (pid, (payload.name or "").strip() or None, token, recovery_code_hash(recovery_code), stamp, stamp),
+        (pid, name, token, recovery_code_hash(recovery_code), stamp, stamp),
     )
     con.commit()
     con.close()
-    return {"participant_id": pid, "name": payload.name or "", "token": token, "recovery_code": recovery_code}
+    return {"participant_id": pid, "name": name, "token": token, "recovery_code": recovery_code}
 
 
 @app.post("/api/learners/session")

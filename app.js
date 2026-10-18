@@ -47,14 +47,24 @@
     ensureStyles();
     if (document.getElementById('cs-modal')) return;
     const m = document.createElement('div'); m.id = 'cs-modal';
-    m.innerHTML = `<div class="box"><h2>Welcome to CyberSA Learn</h2><div id="cs-create-panel"><p>New here? Create a learner record. You’ll receive a participant ID and recovery code to save.</p><label>Name <span style="color:#6B6B85">(optional)</span></label><input id="cs-name" placeholder="Your name" autocomplete="name"><button id="cs-start">Create learner record</button><button type="button" class="cs-switch" id="cs-show-login">Returning learner? Sign in with your participant ID</button></div><div id="cs-login-panel" style="display:none"><p>Enter the participant ID and recovery code you saved earlier to continue your existing learner record.</p><label>Participant ID</label><input id="cs-participant-id" placeholder="CS-0001" autocomplete="username"><label>Recovery code</label><input id="cs-recovery-code" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="one-time-code"><button id="cs-login">Sign in</button><button type="button" class="cs-switch" id="cs-show-create">New learner? Create a learner record</button></div><p style="margin:20px 0 0;text-align:center"><a href="dashboard.html" style="color:#4C5FD5;font-size:13px;font-weight:600">Researcher sign in →</a></p></div>`;
+    m.innerHTML = `<div class="box"><h2>Welcome to CyberSA Learn</h2><div id="cs-create-panel"><p>New here? Create a learner record. You’ll receive a participant ID and recovery code to save.</p><label for="cs-name">Full name</label><input id="cs-name" placeholder="Your name" autocomplete="name" required aria-describedby="cs-name-error"><p id="cs-name-error" role="alert" style="display:none;margin:7px 0 0;color:#B42318;font-size:12px">Please enter your name to create a learner record.</p><button id="cs-start">Create learner record</button><button type="button" class="cs-switch" id="cs-show-login">Returning learner? Sign in with your participant ID</button></div><div id="cs-login-panel" style="display:none"><p>Enter the participant ID and recovery code you saved earlier to continue your existing learner record.</p><label>Participant ID</label><input id="cs-participant-id" placeholder="CS-0001" autocomplete="username"><label>Recovery code</label><input id="cs-recovery-code" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="one-time-code"><button id="cs-login">Sign in</button><button type="button" class="cs-switch" id="cs-show-create">New learner? Create a learner record</button></div><p style="margin:20px 0 0;text-align:center"><a href="dashboard.html" style="color:#4C5FD5;font-size:13px;font-weight:600">Researcher sign in →</a></p></div>`;
     document.body.appendChild(m);
     document.getElementById('cs-show-login').onclick = () => { document.getElementById('cs-create-panel').style.display='none'; document.getElementById('cs-login-panel').style.display='block'; };
     document.getElementById('cs-show-create').onclick = () => { document.getElementById('cs-login-panel').style.display='none'; document.getElementById('cs-create-panel').style.display='block'; };
+    document.getElementById('cs-name').addEventListener('input', () => {
+      const field = document.getElementById('cs-name');
+      const error = document.getElementById('cs-name-error');
+      if (field.value.trim()) { error.style.display='none'; field.removeAttribute('aria-invalid'); }
+    });
     document.getElementById('cs-start').onclick = async () => {
+      const nameField = document.getElementById('cs-name');
+      const nameError = document.getElementById('cs-name-error');
+      const name = nameField.value.trim();
+      if (!name) { nameError.style.display='block'; nameField.setAttribute('aria-invalid','true'); nameField.focus(); return; }
+      nameError.style.display='none'; nameField.removeAttribute('aria-invalid');
       const button = document.getElementById('cs-start'); button.disabled = true; button.textContent = 'Creating learner record...';
       try {
-        const user = await api('/learners', { method:'POST', body: JSON.stringify({ name: document.getElementById('cs-name').value.trim() }) });
+        const user = await api('/learners', { method:'POST', body: JSON.stringify({ name }) });
         localStorage.setItem(TOKEN_KEY, user.token); localStorage.setItem(USER_KEY, user.participant_id); m.remove();
         showRecoveryCode(user.recovery_code, () => location.reload());
       } catch (e) { button.disabled = false; button.textContent = 'Start Learning'; alert(e.message); }
