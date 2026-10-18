@@ -420,7 +420,13 @@ def research_export(x_researcher_password: str | None = Header(default=None)):
             aa = [a for a in data["attempts"] if a["learner_id"] == l["id"] and a["module_id"] == mid]
             a = aa[-1] if aa else {}
             f = feedbacks.get((l["id"], mid), {})
-            writer.writerow([l["participant_id"], l["name"] or "", title, ac.get("progress",0), "Yes" if ac.get("completed") else "No", len(aa), a.get("percentage", ""), a.get("submitted_at", ""), f.get("rating", ""), f.get("comment", "")])
+            if mid == "POST":
+                completed = any(attempt.get("percentage") is not None and attempt["percentage"] >= 70 for attempt in aa)
+                progress = 100 if completed else 0
+            else:
+                completed = bool(ac.get("completed"))
+                progress = ac.get("progress", 0)
+            writer.writerow([l["participant_id"], l["name"] or "", title, progress, "Yes" if completed else "No", len(aa), a.get("percentage", ""), a.get("submitted_at", ""), f.get("rating", ""), f.get("comment", "")])
     return StreamingResponse(iter([out.getvalue()]), media_type="text/csv", headers={"Content-Disposition":"attachment; filename=cybersa-research-results.csv"})
 
 
