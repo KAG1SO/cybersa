@@ -39,6 +39,7 @@
       .cs-feedback select,.cs-feedback textarea{width:100%;margin-top:8px;background:#fff;color:#22213A;border:1px solid #E4E2EE;border-radius:8px;padding:10px;font:inherit}.cs-feedback textarea{min-height:90px;resize:vertical}.cs-feedback button{margin-top:12px;padding:10px 18px;border:0;border-radius:7px;background:#4C5FD5;color:#fff;font-weight:700}
       .cs-user-menu{display:inline-flex;align-items:center;gap:10px}.cs-logout{border:1px solid #E4E2EE;background:#fff;color:#22213A;border-radius:7px;padding:7px 10px;font-size:11px;cursor:pointer}.cs-logout:hover{border-color:#C8C5E8;color:#4C5FD5}
       .topic-link.active{color:#2E9B6F!important}.topic-link.active .dot{background:#2E9B6F!important}
+      .cs-home-progress{margin:0 0 20px;padding:20px 22px;border:1px solid #E4E2EE;border-radius:14px;background:#fff}.cs-home-progress-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.cs-home-progress h3{margin:0;color:#22213A;font-size:16px}.cs-home-progress-count{color:#4C5FD5;font-size:14px;font-weight:700;white-space:nowrap}.cs-home-progress-track{height:8px;margin:13px 0 15px;background:#EDEAFB;border-radius:99px;overflow:hidden}.cs-home-progress-fill{height:100%;background:#4C5FD5;border-radius:99px;transition:width .25s}.cs-home-progress-list{display:flex;flex-wrap:wrap;gap:8px}.cs-home-progress-item{padding:6px 10px;border:1px solid #E4E2EE;border-radius:999px;color:#6B6B85;font-size:11px}.cs-home-progress-item.done{background:#EAF7F1;border-color:#C8E5D8;color:#247A57}.cs-home-progress-item.next{border-color:#C8C5E8;color:#4C5FD5;font-weight:600}
     `; document.head.appendChild(s);
   }
 
@@ -147,10 +148,38 @@
     container.insertAdjacentElement('afterend', nextStep);
   }
 
+  function renderHomeProgress(saved) {
+    const host = document.querySelector('.section-head');
+    if (!host || document.getElementById('cs-home-progress')) return;
+    const completedModules = new Set(saved.completed_modules || []);
+    const postScores = saved.post_assessment_scores || [];
+    const postComplete = postScores.some(score => Number(score) >= 70);
+    const milestones = [
+      ['M1', 'Module 1'], ['M2', 'Module 2'], ['M3', 'Module 3'],
+      ['M4', 'Module 4'], ['M5', 'Module 5']
+    ];
+    const doneCount = completedModules.size + (postComplete ? 1 : 0);
+    const nextIndex = milestones.findIndex(([id]) => !completedModules.has(id));
+    const nextIsPost = nextIndex === -1 && !postComplete;
+    const items = milestones.map(([id, title]) => {
+      const done = completedModules.has(id);
+      const next = !done && nextIndex !== -1 && milestones[nextIndex][0] === id;
+      return `<span class="cs-home-progress-item${done ? ' done' : next ? ' next' : ''}">${done ? '✓ ' : ''}${title}${done ? ' · Completed' : next ? ' · Next up' : ''}</span>`;
+    });
+    items.push(`<span class="cs-home-progress-item${postComplete ? ' done' : nextIsPost ? ' next' : ''}">${postComplete ? '✓ ' : ''}Post-assessment${postComplete ? ' · Completed' : nextIsPost ? ' · Next up' : ''}</span>`);
+    const card = document.createElement('section');
+    card.id = 'cs-home-progress';
+    card.className = 'cs-home-progress';
+    card.setAttribute('aria-label', 'Course progress');
+    card.innerHTML = `<div class="cs-home-progress-head"><h3>Your course progress</h3><span class="cs-home-progress-count">${doneCount} of 6 completed</span></div><div class="cs-home-progress-track" role="progressbar" aria-label="Course completion" aria-valuemin="0" aria-valuemax="6" aria-valuenow="${doneCount}"><div class="cs-home-progress-fill" style="width:${Math.round(doneCount / 6 * 100)}%"></div></div><div class="cs-home-progress-list">${items.join('')}</div>`;
+    host.insertAdjacentElement('afterend', card);
+  }
+
   async function showPostAssessmentIfReady(user) {
     if (!user) return;
     try {
       const saved = await api('/progress');
+      if (page === 'index.html') renderHomeProgress(saved);
       const scores = saved.assessment_scores || {};
       const allPassed = ['M1', 'M2', 'M3', 'M4', 'M5'].every(id => Number(scores[id]) >= 70);
       if (!allPassed) return;

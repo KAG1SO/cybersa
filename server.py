@@ -303,11 +303,18 @@ def learner_progress(authorization: str | None = Header(default=None)):
            ORDER BY submitted_at, id""",
         (learner["id"],),
     ).fetchall()
+    post_attempts = con.execute(
+        """SELECT percentage FROM attempts
+           WHERE learner_id=? AND attempt_type='post_assessment' AND percentage IS NOT NULL
+           ORDER BY submitted_at, id""",
+        (learner["id"],),
+    ).fetchall()
     con.close()
     return {
         "completed_modules": [row["module_id"] for row in rows if row["completed"]],
         "module_progress": {row["module_id"]: row["progress"] for row in rows},
         "assessment_scores": {row["module_id"]: row["percentage"] for row in attempts},
+        "post_assessment_scores": [row["percentage"] for row in post_attempts],
     }
 
 
