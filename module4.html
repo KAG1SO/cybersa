@@ -308,18 +308,9 @@ function toggleCheck(el) {
   cb.innerHTML = el.classList.contains('checked') ? '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
 }
 function checkQuiz() {
-  const answers={q1:'a',q2:'b',q3:'b',q4:'b',q5:'b'};
-  let score=0;
-  for(const[q,correct]of Object.entries(answers)){
-    const selected=document.querySelector(`input[name="${q}"]:checked`);
-    document.querySelectorAll(`input[name="${q}"]`).forEach(o=>o.parentElement.classList.remove('correct','wrong'));
-    if(selected){if(selected.value===correct){selected.parentElement.classList.add('correct');score++;}else{selected.parentElement.classList.add('wrong');document.querySelector(`input[name="${q}"][value="${correct}"]`).parentElement.classList.add('correct');}}
-    else{document.querySelector(`input[name="${q}"][value="${correct}"]`).parentElement.classList.add('correct');}
-  }
-  const pct=Math.round((score/5)*100);
-  const r=document.getElementById('quiz-result');
-  r.className='quiz-result show '+(pct>=70?'pass':'fail');
-  r.textContent=pct>=70?`✓ Well done! You scored ${score}/5 (${pct}%). Passed!`:`✗ You scored ${score}/5 (${pct}%). Review above and try again.`;
+  const result = document.getElementById('quiz-result');
+  result.className = 'quiz-result show';
+  result.textContent = 'Checking your answers...';
 }
 </script>
 <script src="app.js"></script></body>

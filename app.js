@@ -352,17 +352,32 @@
     window.checkQuiz = function() {
       original();
       setTimeout(async () => {
-        const result = document.getElementById('quiz-result'); const txt = result?.textContent || '';
-        const match = txt.match(/(\d+)\/(\d+)\s*\((\d+)%\)/); if (!match) return;
-        const score = +match[1], total = +match[2], percentage = +match[3];
-        showModuleAssessmentScore(percentage);
+        const result = document.getElementById('quiz-result');
+        if (!result) return;
         try {
-          await api('/attempts', {method:'POST', body:JSON.stringify({module_id:mod.id, score, total, percentage, answers:collectAnswers(), attempt_type:'knowledge_check'} )});
+          const verified = await api('/attempts', {method:'POST', body:JSON.stringify({module_id:mod.id, answers:collectAnswers(), attempt_type:'knowledge_check'})});
+          showModuleAssessmentScore(verified.percentage);
+          result.className = `quiz-result show ${verified.passed ? 'pass' : 'fail'}`;
+          result.textContent = `${verified.passed ? '✓ Well done!' : '✗ Review the sections above and try again.'} You scored ${verified.score}/${verified.total} (${verified.percentage}%).`;
+          document.querySelectorAll('.quiz-q').forEach((question, index) => {
+            const questionName = `q${index + 1}`;
+            const correctValue = String(verified.correct_answers[questionName]);
+            const selected = question.querySelector('input:checked');
+            question.querySelectorAll('input').forEach(input => input.parentElement.classList.remove('correct', 'wrong'));
+            const correctInput = [...question.querySelectorAll('input')].find(input => input.value === correctValue);
+            if (correctInput) correctInput.parentElement.classList.add('correct');
+            if (selected && selected.value !== correctValue) selected.parentElement.classList.add('wrong');
+          });
           showFeedback();
-          if (mod.id === 'M5' && percentage >= 70) showPostAssessmentIfReady(await currentUser());
+          if (mod.id === 'M5' && verified.passed) showPostAssessmentIfReady(await currentUser());
         }
-        catch(e) { console.error(e); alert('Your quiz was displayed, but the research record could not be saved. Please check that the CyberSA server is running.'); }
-      }, 50);
+        catch(e) {
+          console.error(e);
+          result.className = 'quiz-result show fail';
+          result.textContent = e.message || 'Your result could not be saved. Please try again.';
+          alert('Your quiz result could not be verified or saved. Please try again.');
+        }
+      }, 0);
     };
     window.__csPatched = true; return true;
   }

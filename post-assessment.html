@@ -37,16 +37,16 @@
 </main>
 <script>
 const items=[
-  {q:'You receive an urgent email asking you to verify your university account through a link. What should you do first?',o:['Click quickly before the link expires','Check the sender and verify through the university’s official website or IT service desk','Reply with your password to confirm your identity','Forward it to classmates'],a:1},
-  {q:'What does POPIA primarily regulate?',o:['The speed of internet connections','The lawful handling and protection of personal information','The use of open-source software','Online gaming accounts'],a:1},
-  {q:'Which is the strongest approach to account passwords?',o:['Reuse one memorable password everywhere','Use a unique, long password for each account, stored in a password manager','Use your name and birth year','Change one character in the same password for every site'],a:1},
-  {q:'What does multi-factor authentication add to a sign-in?',o:['A second kind of identity check in addition to the password','A longer username','Automatic password sharing','Public access to your account'],a:0},
-  {q:'Which information is safest to share publicly on social media?',o:['Your live location and travel dates','A photo of your ID for verification','Only information you are comfortable being widely visible','Your security-question answers'],a:2},
-  {q:'An unfamiliar account sends you a link to claim a prize. What is the safest response?',o:['Open it in a private browser window','Do not open it; verify the offer independently and report the account if suspicious','Send the link to friends to ask if it works','Enter only your email address'],a:1},
-  {q:'A message says your bank account will be blocked unless you act now. What is a common warning sign?',o:['It uses the bank’s usual app','It creates urgency and asks you to use a message link','You initiated contact using the number on your bank card','It contains no request'],a:1},
-  {q:'Files become encrypted and a message demands payment. What type of malware is most likely involved?',o:['Adware','Ransomware','A password manager','A firewall'],a:1},
-  {q:'What is the first response if you suspect a device is compromised?',o:['Disconnect it from networks and contact your IT support team','Delete files that look unusual','Pay any demand immediately','Continue using it to see what happens'],a:0},
-  {q:'What should you do before entering banking details on public Wi-Fi?',o:['Use any network with “free” in its name','Avoid the transaction or use a trusted secure connection such as your mobile network','Turn off your device firewall','Share the network password publicly'],a:1}
+  {q:'You receive an urgent email asking you to verify your university account through a link. What should you do first?',o:['Click quickly before the link expires','Check the sender and verify through the university’s official website or IT service desk','Reply with your password to confirm your identity','Forward it to classmates']},
+  {q:'What does POPIA primarily regulate?',o:['The speed of internet connections','The lawful handling and protection of personal information','The use of open-source software','Online gaming accounts']},
+  {q:'Which is the strongest approach to account passwords?',o:['Reuse one memorable password everywhere','Use a unique, long password for each account, stored in a password manager','Use your name and birth year','Change one character in the same password for every site']},
+  {q:'What does multi-factor authentication add to a sign-in?',o:['A second kind of identity check in addition to the password','A longer username','Automatic password sharing','Public access to your account']},
+  {q:'Which information is safest to share publicly on social media?',o:['Your live location and travel dates','A photo of your ID for verification','Only information you are comfortable being widely visible','Your security-question answers']},
+  {q:'An unfamiliar account sends you a link to claim a prize. What is the safest response?',o:['Open it in a private browser window','Do not open it; verify the offer independently and report the account if suspicious','Send the link to friends to ask if it works','Enter only your email address']},
+  {q:'A message says your bank account will be blocked unless you act now. What is a common warning sign?',o:['It uses the bank’s usual app','It creates urgency and asks you to use a message link','You initiated contact using the number on your bank card','It contains no request']},
+  {q:'Files become encrypted and a message demands payment. What type of malware is most likely involved?',o:['Adware','Ransomware','A password manager','A firewall']},
+  {q:'What is the first response if you suspect a device is compromised?',o:['Disconnect it from networks and contact your IT support team','Delete files that look unusual','Pay any demand immediately','Continue using it to see what happens']},
+  {q:'What should you do before entering banking details on public Wi-Fi?',o:['Use any network with “free” in its name','Avoid the transaction or use a trusted secure connection such as your mobile network','Turn off your device firewall','Share the network password publicly']}
 ];
 const token=localStorage.getItem('cybersaAuthToken');
 const statusEl=document.getElementById('status');
@@ -70,14 +70,15 @@ form.addEventListener('submit',async event=>{
   event.preventDefault();
   if(!form.reportValidity())return;
   const button=document.getElementById('submit');button.disabled=true;button.textContent='Saving your result…';
-  let score=0;const answers={};
-  items.forEach((item,i)=>{const selected=form.querySelector(`input[name="q${i+1}"]:checked`);const value=Number(selected.value);answers[`q${i+1}`]=value;if(value===item.a)score++;});
-  const percentage=Math.round(score/items.length*100);
+  const answers={};
+  items.forEach((item,i)=>{const selected=form.querySelector(`input[name="q${i+1}"]:checked`);answers[`q${i+1}`]=selected.value;});
   try{
-    const response=await fetch('/api/attempts',{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({module_id:'POST',attempt_type:'post_assessment',score,total:items.length,percentage,answers})});
+    const response=await fetch('/api/attempts',{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({module_id:'POST',attempt_type:'post_assessment',answers})});
     if(!response.ok)throw new Error('Your result could not be saved. Please try again.');
-    resultEl.className=`result ${percentage>=70?'pass':'fail'}`;resultEl.innerHTML=`${percentage>=70?'You passed':'Not passed yet'}: ${score} out of ${items.length} (${percentage}%). ${percentage>=70?'Your post-assessment result has been recorded.':'Review the modules and try again.'}${percentage>=70?' <a href="certificate.html" style="display:inline-block;margin-left:8px;color:var(--indigo);font-weight:700">Download your certificate</a>':''}`;resultEl.classList.remove('hidden');
-    const review=document.getElementById('answer-review');review.innerHTML='<strong>Answer review</strong>'+items.map((item,i)=>{const correct=answers[`q${i+1}`]===item.a;return `<div style="padding:12px 0;border-bottom:1px solid var(--line);line-height:1.6"><strong style="color:${correct?'var(--green)':'var(--red)'}">${i+1}. ${correct?'Correct':'Review this answer'}</strong><br>Your answer: ${escapeHtml(item.o[answers[`q${i+1}`]])}${correct?'':`<br>Correct answer: ${escapeHtml(item.o[item.a])}`}</div>`}).join('');review.classList.remove('hidden');
+    const verified=await response.json();
+    const {score,total,percentage,passed,correct_answers:correctAnswers}=verified;
+    resultEl.className=`result ${passed?'pass':'fail'}`;resultEl.innerHTML=`${passed?'You passed':'Not passed yet'}: ${score} out of ${total} (${percentage}%). ${passed?'Your post-assessment result has been recorded.':'Review the modules and try again.'}${passed?' <a href="certificate.html" style="display:inline-block;margin-left:8px;color:var(--indigo);font-weight:700">Download your certificate</a>':''}`;resultEl.classList.remove('hidden');
+    const review=document.getElementById('answer-review');review.innerHTML='<strong>Answer review</strong>'+items.map((item,i)=>{const answer=answers[`q${i+1}`],correct=answer===String(correctAnswers[`q${i+1}`]);return `<div style="padding:12px 0;border-bottom:1px solid var(--line);line-height:1.6"><strong style="color:${correct?'var(--green)':'var(--red)'}">${i+1}. ${correct?'Correct':'Review this answer'}</strong><br>Your answer: ${escapeHtml(item.o[Number(answer)])}${correct?'':`<br>Correct answer: ${escapeHtml(item.o[Number(correctAnswers[`q${i+1}`])])}`}</div>`}).join('');review.classList.remove('hidden');
     document.getElementById('feedback').classList.remove('hidden');
     resultEl.scrollIntoView({behavior:'smooth',block:'center'});
   }catch(e){alert(e.message);}

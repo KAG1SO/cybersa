@@ -34,6 +34,20 @@ MODULES = {
     "M5": "Cyber Attack Awareness",
 }
 
+# Keep assessment answer keys on the server. The browser may report answers,
+# but scores and completion status must always be calculated here.
+ASSESSMENT_ANSWER_KEYS = {
+    "M1": {"q1": "b", "q2": "c", "q3": "c", "q4": "b", "q5": "false"},
+    "M2": {"q1": "true", "q2": "b", "q3": "c", "q4": "c", "q5": "c"},
+    "M3": {"q1": "c", "q2": "b", "q3": "b", "q4": "b", "q5": "true"},
+    "M4": {"q1": "a", "q2": "b", "q3": "b", "q4": "b", "q5": "b"},
+    "M5": {"q1": "b", "q2": "b", "q3": "b", "q4": "c", "q5": "false"},
+    "POST": {
+        "q1": "1", "q2": "1", "q3": "1", "q4": "0", "q5": "2",
+        "q6": "1", "q7": "1", "q8": "1", "q9": "0", "q10": "1",
+    },
+}
+
 app = FastAPI(title="CyberSA Research API", version="1.0.0")
 
 
@@ -420,6 +434,20 @@ def activity(payload: ActivityIn, authorization: str | None = Header(default=Non
 def attempt(payload: AttemptIn, authorization: str | None = Header(default=None)):
     if payload.module_id not in MODULES and payload.module_id != "POST":
         raise HTTPException(400, "Unknown module")
+    expected_attempt_type = "post_assessment" if payload.module_id == "POST" else "knowledge_check"
+    if payload.attempt_type != expected_attempt_type:
+        raise HTTPException(400, "Assessment type does not match the selected module")
+
+    answer_key = ASSESSMENT_ANSWER_KEYS[payload.module_id]
+    expected_questions = set(answer_key)
+    if set(payload.answers) != expected_questions:
+        raise HTTPException(400, "Please submit an answer for every assessment question")
+    submitted_answers = {}
+    for question, value in payload.answers.items():
+        if value is not None and not isinstance(value, (str, int, bool)):
+            raise HTTPException(400, "Assessment answers must be text or numbers")
+        submitted_answers[question] = "" if value is None else str(value).strip().casefold()
+
     learner = learner_from_token(authorization.removeprefix("Bearer ") if authorization else None)
     is_post_assessment = payload.attempt_type == "post_assessment"
     if is_post_assessment:
@@ -434,15 +462,15 @@ def attempt(payload: AttemptIn, authorization: str | None = Header(default=None)
         prerequisite = first_incomplete_module(learner["id"], "POST")
         if prerequisite:
             raise HTTPException(403, f"Pass Module {prerequisite.removeprefix('M')} before taking the post-assessment.")
-    pct = payload.percentage
-    if pct is None and payload.score is not None and payload.total:
-        pct = round(payload.score / payload.total * 100)
+    score = sum(submitted_answers[question] == correct for question, correct in answer_key.items())
+    total = len(answer_key)
+    pct = round(score / total * 100)
     stamp = now()
     import json
     con = db()
     con.execute(
         "INSERT INTO attempts(learner_id,module_id,attempt_type,score,total,percentage,answers_json,submitted_at) VALUES(?,?,?,?,?,?,?,?)",
-        (learner["id"], "POST" if is_post_assessment else payload.module_id, payload.attempt_type, payload.score, payload.total, pct, json.dumps(payload.answers), stamp),
+        (learner["id"], "POST" if is_post_assessment else payload.module_id, payload.attempt_type, score, total, pct, json.dumps(submitted_answers), stamp),
     )
     if payload.module_id in MODULES and not is_post_assessment and pct is not None and pct >= 70:
         con.execute(
@@ -453,7 +481,14 @@ def attempt(payload: AttemptIn, authorization: str | None = Header(default=None)
         )
     con.execute("UPDATE learners SET last_seen_at=? WHERE id=?", (stamp, learner["id"]))
     con.commit(); con.close()
-    return {"ok": True, "percentage": pct, "passed": pct is not None and pct >= 70}
+    return {
+        "ok": True,
+        "score": score,
+        "total": total,
+        "percentage": pct,
+        "passed": pct >= 70,
+        "correct_answers": answer_key,
+    }
 
 
 @app.post("/api/feedback")

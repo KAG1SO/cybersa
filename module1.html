@@ -436,36 +436,9 @@ body{background:#fff;color:#22213A}.topbar{background:#fff;border-bottom:1px sol
 
 <script>
 function checkQuiz() {
-  const answers = { q1: 'b', q2: 'c', q3: 'c', q4: 'b', q5: 'false' };
-  let score = 0;
-  let total = Object.keys(answers).length;
-
-  for (const [q, correct] of Object.entries(answers)) {
-    const selected = document.querySelector(`input[name="${q}"]:checked`);
-    const options = document.querySelectorAll(`input[name="${q}"]`);
-    options.forEach(opt => {
-      const label = opt.parentElement;
-      label.classList.remove('correct', 'wrong');
-    });
-    if (selected) {
-      if (selected.value === correct) {
-        selected.parentElement.classList.add('correct');
-        score++;
-      } else {
-        selected.parentElement.classList.add('wrong');
-        document.querySelector(`input[name="${q}"][value="${correct}"]`).parentElement.classList.add('correct');
-      }
-    } else {
-      document.querySelector(`input[name="${q}"][value="${correct}"]`).parentElement.classList.add('correct');
-    }
-  }
-
-  const pct = Math.round((score / total) * 100);
   const result = document.getElementById('quiz-result');
-  result.className = 'quiz-result show ' + (pct >= 70 ? 'pass' : 'fail');
-  result.textContent = pct >= 70
-    ? `✓ Well done! You scored ${score}/${total} (${pct}%). You have passed this knowledge check.`
-    : `✗ You scored ${score}/${total} (${pct}%). Review the sections above and try again. You need 70% to pass.`;
+  result.className = 'quiz-result show';
+  result.textContent = 'Checking your answers...';
 }
 </script>
 
