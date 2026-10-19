@@ -182,7 +182,7 @@
 
   function renderHomeProgress(saved) {
     const host = document.querySelector('.section-head');
-    if (!host || document.getElementById('cs-home-progress')) return;
+    if (!host) return;
     const completedModules = new Set(saved.completed_modules || []);
     const postScores = saved.post_assessment_scores || [];
     const postComplete = postScores.some(score => Number(score) >= 70);
@@ -200,12 +200,20 @@
       return `<span class="cs-home-progress-item${done ? ' done' : next ? ' next' : ''}">${done ? '✓ ' : ''}${title}${done ? ' · Completed' : next ? ' · Next up' : ''}</span>`;
     });
     items.push(`<span class="cs-home-progress-item${postComplete ? ' done' : nextIsPost ? ' next' : ''}">${postComplete ? '✓ ' : ''}Post-assessment${postComplete ? ' · Completed' : nextIsPost ? ' · Next up' : ''}</span>`);
-    const card = document.createElement('section');
-    card.id = 'cs-home-progress';
-    card.className = 'cs-home-progress';
-    card.setAttribute('aria-label', 'Course progress');
-    card.innerHTML = `<div class="cs-home-progress-head"><h3>Your course progress</h3><span class="cs-home-progress-count">${doneCount} of 6 completed</span></div><div class="cs-home-progress-track" role="progressbar" aria-label="Course completion" aria-valuemin="0" aria-valuemax="6" aria-valuenow="${doneCount}"><div class="cs-home-progress-fill" style="width:${Math.round(doneCount / 6 * 100)}%"></div></div><div class="cs-home-progress-list">${items.join('')}</div>${allModulesComplete&&postComplete?'<a href="certificate.html" style="display:inline-block;margin-top:16px;padding:10px 14px;border-radius:8px;background:#4C5FD5;color:#fff;text-decoration:none;font-weight:700">Download your certificate</a>':''}`;
-    host.insertAdjacentElement('afterend', card);
+    let card = document.getElementById('cs-home-progress');
+    if (!card) {
+      card = document.createElement('section');
+      card.id = 'cs-home-progress';
+      card.className = 'cs-home-progress';
+      card.setAttribute('aria-label', 'Course progress');
+      host.insertAdjacentElement('afterend', card);
+    }
+    const finalStep = allModulesComplete
+      ? postComplete
+        ? '<a href="certificate.html" style="display:inline-block;margin-top:16px;padding:10px 14px;border-radius:8px;background:#4C5FD5;color:#fff;text-decoration:none;font-weight:700">Download your certificate</a>'
+        : '<a href="post-assessment.html" style="display:inline-block;margin-top:16px;padding:10px 14px;border-radius:8px;background:#4C5FD5;color:#fff;text-decoration:none;font-weight:700">Take your post-assessment to unlock your certificate</a>'
+      : '';
+    card.innerHTML = `<div class="cs-home-progress-head"><h3>Your course progress</h3><span class="cs-home-progress-count">${doneCount} of 6 completed</span></div><div class="cs-home-progress-track" role="progressbar" aria-label="Course completion" aria-valuemin="0" aria-valuemax="6" aria-valuenow="${doneCount}"><div class="cs-home-progress-fill" style="width:${Math.round(doneCount / 6 * 100)}%"></div></div><div class="cs-home-progress-list">${items.join('')}</div>${finalStep}`;
   }
 
   function renderModuleAvailability(saved) {
@@ -372,5 +380,10 @@
     }
     showResearcherError();
   }
+  window.addEventListener('pageshow', event => {
+    if (event.persisted && page === 'index.html') {
+      currentUser().then(user => user && showPostAssessmentIfReady(user));
+    }
+  });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
