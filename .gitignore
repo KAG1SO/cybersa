@@ -4,8 +4,8 @@ __pycache__/
 *.py[cod]
 
 # Local database and SQLite journal files (may contain participant data)
-cybersa.db
-cybersa.db-*
+*.db
+*.db-*
 *.sqlite
 *.sqlite3
 

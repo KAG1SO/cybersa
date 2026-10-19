@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import ipaddress
 import io
+import logging
 import os
 import secrets
 import sqlite3
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -49,6 +52,7 @@ ASSESSMENT_ANSWER_KEYS = {
 }
 
 app = FastAPI(title="CyberSA Research API", version="1.0.0")
+security_logger = logging.getLogger("cybersa.security")
 
 
 class PostgresConnection:
@@ -82,6 +86,10 @@ def recovery_code_hash(code: str):
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 
+def session_token_hash(token: str):
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
 def db():
     if DATABASE_URL:
         import psycopg
@@ -102,6 +110,7 @@ def init_db():
             participant_id TEXT UNIQUE NOT NULL,
             name TEXT,
             auth_token TEXT UNIQUE NOT NULL,
+            auth_token_hashed INTEGER NOT NULL DEFAULT 0,
             recovery_code_hash TEXT,
             created_at TEXT NOT NULL,
             last_seen_at TEXT
@@ -139,6 +148,12 @@ def init_db():
             submitted_at TEXT NOT NULL,
             FOREIGN KEY(learner_id) REFERENCES learners(id)
         );
+        CREATE TABLE IF NOT EXISTS login_rate_limits (
+            bucket_key TEXT PRIMARY KEY,
+            failure_count INTEGER NOT NULL,
+            window_started_at INTEGER NOT NULL,
+            blocked_until INTEGER NOT NULL DEFAULT 0
+        );
         """
     if DATABASE_URL:
         for statement in schema.split(";"):
@@ -148,10 +163,21 @@ def init_db():
         con.executescript(schema)
     if DATABASE_URL:
         con.execute("ALTER TABLE learners ADD COLUMN IF NOT EXISTS recovery_code_hash TEXT")
+        con.execute("ALTER TABLE learners ADD COLUMN IF NOT EXISTS auth_token_hashed INTEGER NOT NULL DEFAULT 0")
     else:
         columns = {row["name"] for row in con.execute("PRAGMA table_info(learners)").fetchall()}
         if "recovery_code_hash" not in columns:
             con.execute("ALTER TABLE learners ADD COLUMN recovery_code_hash TEXT")
+        if "auth_token_hashed" not in columns:
+            con.execute("ALTER TABLE learners ADD COLUMN auth_token_hashed INTEGER NOT NULL DEFAULT 0")
+    unhashed_tokens = con.execute(
+        "SELECT id, auth_token FROM learners WHERE auth_token_hashed=0"
+    ).fetchall()
+    for learner in unhashed_tokens:
+        con.execute(
+            "UPDATE learners SET auth_token=?, auth_token_hashed=1 WHERE id=?",
+            (session_token_hash(learner["auth_token"]), learner["id"]),
+        )
     con.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_learners_recovery_code_hash ON learners(recovery_code_hash)")
     con.commit()
     con.close()
@@ -208,7 +234,7 @@ def learner_from_token(token: str | None):
     if not token:
         raise HTTPException(status_code=401, detail="Learner login required")
     con = db()
-    row = con.execute("SELECT * FROM learners WHERE auth_token=?", (token,)).fetchone()
+    row = con.execute("SELECT * FROM learners WHERE auth_token=?", (session_token_hash(token),)).fetchone()
     con.close()
     if not row:
         raise HTTPException(status_code=401, detail="Invalid learner session")
@@ -233,9 +259,97 @@ def first_incomplete_module(learner_id: int, module_id: str):
     return None
 
 
-def researcher_guard(password: str | None):
+LOGIN_WINDOW_SECONDS = 15 * 60
+RESEARCHER_LOGIN_LIMIT = 5
+LEARNER_LOGIN_LIMIT = 5
+LEARNER_IP_LOGIN_LIMIT = 60
+
+
+def login_bucket_key(scope: str, address: str, identity: str = ""):
+    value = f"{scope}\0{address}\0{identity.casefold()}"
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def remote_address(request: Request):
+    if os.getenv("RENDER"):
+        forwarded_for = request.headers.get("x-forwarded-for", "")
+        if forwarded_for:
+            candidate = forwarded_for.split(",", 1)[0].strip()
+            try:
+                return str(ipaddress.ip_address(candidate))
+            except ValueError:
+                pass
+    return request.client.host if request.client else "unknown"
+
+
+def check_login_limits(bucket_keys: list[str]):
+    current = int(time.time())
+    con = db()
+    rows = [
+        con.execute(
+            "SELECT failure_count, blocked_until FROM login_rate_limits WHERE bucket_key=?",
+            (key,),
+        ).fetchone()
+        for key in bucket_keys
+    ]
+    con.close()
+    retry_after = max((int(row["blocked_until"]) - current for row in rows if row and row["blocked_until"] > current), default=0)
+    if retry_after:
+        security_logger.warning("Authentication rate limit triggered; retry_after=%s", retry_after)
+        raise HTTPException(
+            status_code=429,
+            detail="Too many sign-in attempts. Please wait before trying again.",
+            headers={"Retry-After": str(retry_after)},
+        )
+
+
+def record_login_failure(bucket_key: str, limit: int):
+    current = int(time.time())
+    window_start = current - LOGIN_WINDOW_SECONDS
+    con = db()
+    con.execute(
+        """INSERT INTO login_rate_limits(bucket_key,failure_count,window_started_at,blocked_until)
+           VALUES(?,1,?,0)
+           ON CONFLICT(bucket_key) DO UPDATE SET
+             failure_count=CASE WHEN login_rate_limits.window_started_at<=? THEN 1 ELSE login_rate_limits.failure_count+1 END,
+             window_started_at=CASE WHEN login_rate_limits.window_started_at<=? THEN excluded.window_started_at ELSE login_rate_limits.window_started_at END,
+             blocked_until=CASE
+               WHEN (CASE WHEN login_rate_limits.window_started_at<=? THEN 1 ELSE login_rate_limits.failure_count+1 END)>=?
+               THEN ? ELSE 0 END""",
+        (
+            bucket_key, current, window_start, window_start, window_start,
+            limit, current + LOGIN_WINDOW_SECONDS,
+        ),
+    )
+    con.execute("DELETE FROM login_rate_limits WHERE window_started_at<? AND blocked_until<?", (current - 24 * 60 * 60, current))
+    con.commit()
+    con.close()
+
+
+def clear_login_limits(bucket_keys: list[str]):
+    con = db()
+    for key in bucket_keys:
+        con.execute("DELETE FROM login_rate_limits WHERE bucket_key=?", (key,))
+    con.commit()
+    con.close()
+
+
+def learner_login_buckets(request: Request, participant_id: str):
+    address = remote_address(request)
+    return [
+        (login_bucket_key("learner-ip", address), LEARNER_IP_LOGIN_LIMIT),
+        (login_bucket_key("learner-id", address, participant_id), LEARNER_LOGIN_LIMIT),
+    ]
+
+
+def researcher_guard(password: str | None, request: Request):
+    bucket = login_bucket_key("researcher", remote_address(request))
+    check_login_limits([bucket])
     if not password or not secrets.compare_digest(password, RESEARCHER_PASSWORD):
+        security_logger.warning("Researcher sign-in failed")
+        record_login_failure(bucket, RESEARCHER_LOGIN_LIMIT)
         raise HTTPException(status_code=401, detail="Researcher authentication required")
+    clear_login_limits([bucket])
 
 
 @app.post("/api/learners")
@@ -249,8 +363,8 @@ def create_learner(payload: LearnerCreate):
     recovery_code = new_recovery_code()
     stamp = now()
     con.execute(
-        "INSERT INTO learners(participant_id,name,auth_token,recovery_code_hash,created_at,last_seen_at) VALUES(?,?,?,?,?,?)",
-        (pid, name, token, recovery_code_hash(recovery_code), stamp, stamp),
+        "INSERT INTO learners(participant_id,name,auth_token,auth_token_hashed,recovery_code_hash,created_at,last_seen_at) VALUES(?,?,?,1,?,?,?)",
+        (pid, name, session_token_hash(token), recovery_code_hash(recovery_code), stamp, stamp),
     )
     con.commit()
     con.close()
@@ -258,21 +372,28 @@ def create_learner(payload: LearnerCreate):
 
 
 @app.post("/api/learners/session")
-def login_learner(payload: LearnerLogin):
+def login_learner(payload: LearnerLogin, request: Request):
+    participant_id = payload.participant_id.strip().upper()
+    buckets = learner_login_buckets(request, participant_id)
+    check_login_limits([key for key, _ in buckets])
     con = db()
     learner = con.execute(
         "SELECT * FROM learners WHERE participant_id=?",
-        (payload.participant_id.strip().upper(),),
+        (participant_id,),
     ).fetchone()
     supplied_hash = recovery_code_hash(payload.recovery_code)
     if not learner or not learner["recovery_code_hash"] or not secrets.compare_digest(learner["recovery_code_hash"], supplied_hash):
         con.close()
+        security_logger.warning("Learner sign-in failed")
+        for key, limit in buckets:
+            record_login_failure(key, limit)
         raise HTTPException(status_code=401, detail="Participant ID or recovery code is incorrect")
     token = secrets.token_urlsafe(32)
     stamp = now()
-    con.execute("UPDATE learners SET auth_token=?, last_seen_at=? WHERE id=?", (token, stamp, learner["id"]))
+    con.execute("UPDATE learners SET auth_token=?, auth_token_hashed=1, last_seen_at=? WHERE id=?", (session_token_hash(token), stamp, learner["id"]))
     con.commit()
     con.close()
+    clear_login_limits([key for key, _ in buckets])
     return {"participant_id": learner["participant_id"], "name": learner["name"] or "", "token": token}
 
 
@@ -314,7 +435,7 @@ def logout_learner(authorization: str | None = Header(default=None)):
     token = authorization.removeprefix("Bearer ") if authorization else None
     learner = learner_from_token(token)
     con = db()
-    con.execute("UPDATE learners SET auth_token=? WHERE id=?", (secrets.token_urlsafe(32), learner["id"]))
+    con.execute("UPDATE learners SET auth_token=?, auth_token_hashed=1 WHERE id=?", (session_token_hash(secrets.token_urlsafe(32)), learner["id"]))
     con.commit()
     con.close()
     return {"ok": True}
@@ -517,15 +638,27 @@ def research_data():
     return {"learners": learners, "activities": activities, "attempts": attempts, "feedback": feedback_rows}
 
 
+def safe_csv_value(value):
+    if not isinstance(value, str):
+        return value
+    if value.lstrip(" \t\r\n").startswith(("=", "+", "-", "@")):
+        return "'" + value
+    return value
+
+
+def write_safe_csv_row(writer, values):
+    writer.writerow([safe_csv_value(value) for value in values])
+
+
 @app.get("/api/research/summary")
-def research_summary(x_researcher_password: str | None = Header(default=None)):
-    researcher_guard(x_researcher_password)
+def research_summary(request: Request, x_researcher_password: str | None = Header(default=None)):
+    researcher_guard(x_researcher_password, request)
     return research_data()
 
 
 @app.get("/api/research/export.csv")
-def research_export(x_researcher_password: str | None = Header(default=None)):
-    researcher_guard(x_researcher_password)
+def research_export(request: Request, x_researcher_password: str | None = Header(default=None)):
+    researcher_guard(x_researcher_password, request)
     data = research_data()
     names = {x["id"]: x for x in data["learners"]}
     activities = {(x["learner_id"], x["module_id"]): x for x in data["activities"]}
@@ -537,7 +670,7 @@ def research_export(x_researcher_password: str | None = Header(default=None)):
         feedbacks[(f["learner_id"], f["module_id"])] = f
     out = io.StringIO()
     writer = csv.writer(out)
-    writer.writerow(["Participant","Name","Module","Progress","Completed","Attempts","Latest Score %","Latest Attempt","Feedback Rating","Feedback Comment"])
+    write_safe_csv_row(writer, ["Participant","Name","Module","Progress","Completed","Attempts","Latest Score %","Latest Attempt","Feedback Rating","Feedback Comment"])
     for l in data["learners"]:
         for mid, title in [*MODULES.items(), ("POST", "Post-assessment")]:
             ac = activities.get((l["id"], mid), {})
@@ -550,22 +683,22 @@ def research_export(x_researcher_password: str | None = Header(default=None)):
             else:
                 completed = bool(ac.get("completed"))
                 progress = ac.get("progress", 0)
-            writer.writerow([l["participant_id"], l["name"] or "", title, progress, "Yes" if completed else "No", len(aa), a.get("percentage", ""), a.get("submitted_at", ""), f.get("rating", ""), f.get("comment", "")])
+            write_safe_csv_row(writer, [l["participant_id"], l["name"] or "", title, progress, "Yes" if completed else "No", len(aa), a.get("percentage", ""), a.get("submitted_at", ""), f.get("rating", ""), f.get("comment", "")])
     return StreamingResponse(iter([out.getvalue()]), media_type="text/csv", headers={"Content-Disposition":"attachment; filename=cybersa-research-results.csv"})
 
 
 @app.get("/api/research/feedback-export.csv")
-def research_feedback_export(x_researcher_password: str | None = Header(default=None)):
-    researcher_guard(x_researcher_password)
+def research_feedback_export(request: Request, x_researcher_password: str | None = Header(default=None)):
+    researcher_guard(x_researcher_password, request)
     data = research_data()
     names = {learner["id"]: learner for learner in data["learners"]}
     titles = {**MODULES, "POST": "Course feedback"}
     out = io.StringIO()
     writer = csv.writer(out)
-    writer.writerow(["Participant", "Name", "Module", "Rating", "Comment", "Feedback Submitted"])
+    write_safe_csv_row(writer, ["Participant", "Name", "Module", "Rating", "Comment", "Feedback Submitted"])
     for feedback in data["feedback"]:
         learner = names.get(feedback["learner_id"], {})
-        writer.writerow([
+        write_safe_csv_row(writer, [
             learner.get("participant_id", ""), learner.get("name", "") or "",
             titles.get(feedback["module_id"], feedback["module_id"]), feedback["rating"],
             feedback["comment"], feedback["submitted_at"],
@@ -574,8 +707,8 @@ def research_feedback_export(x_researcher_password: str | None = Header(default=
 
 
 @app.post("/api/research/clear-prototype")
-def clear_prototype_data(x_researcher_password: str | None = Header(default=None)):
-    researcher_guard(x_researcher_password)
+def clear_prototype_data(request: Request, x_researcher_password: str | None = Header(default=None)):
+    researcher_guard(x_researcher_password, request)
     if DATABASE_URL:
         raise HTTPException(403, "Prototype data can only be cleared from the local SQLite database.")
     con = db()
@@ -589,8 +722,8 @@ def clear_prototype_data(x_researcher_password: str | None = Header(default=None
 
 
 @app.delete("/api/research/learners/{participant_id}")
-def delete_research_learner(participant_id: str, x_researcher_password: str | None = Header(default=None)):
-    researcher_guard(x_researcher_password)
+def delete_research_learner(participant_id: str, request: Request, x_researcher_password: str | None = Header(default=None)):
+    researcher_guard(x_researcher_password, request)
     con = db()
     learner = con.execute("SELECT id FROM learners WHERE participant_id=?", (participant_id.upper(),)).fetchone()
     if not learner:
@@ -607,8 +740,8 @@ def delete_research_learner(participant_id: str, x_researcher_password: str | No
 
 
 @app.delete("/api/research/learners")
-def delete_all_research_learners(x_researcher_password: str | None = Header(default=None)):
-    researcher_guard(x_researcher_password)
+def delete_all_research_learners(request: Request, x_researcher_password: str | None = Header(default=None)):
+    researcher_guard(x_researcher_password, request)
     con = db()
     con.execute("DELETE FROM feedback")
     con.execute("DELETE FROM attempts")
@@ -620,8 +753,8 @@ def delete_all_research_learners(x_researcher_password: str | None = Header(defa
 
 
 @app.post("/api/research/learners/{participant_id}/recovery-code")
-def reset_research_learner_recovery_code(participant_id: str, x_researcher_password: str | None = Header(default=None)):
-    researcher_guard(x_researcher_password)
+def reset_research_learner_recovery_code(participant_id: str, request: Request, x_researcher_password: str | None = Header(default=None)):
+    researcher_guard(x_researcher_password, request)
     con = db()
     learner = con.execute(
         "SELECT id, participant_id FROM learners WHERE participant_id=?",
@@ -650,6 +783,6 @@ def health():
     con = db()
     con.execute("SELECT 1")
     con.close()
-    return {"ok": True}
+    return {"ok": True, "database": "postgresql" if DATABASE_URL else "sqlite"}
 
 app.mount("/", StaticFiles(directory=BASE, html=True), name="static")
