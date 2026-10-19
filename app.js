@@ -244,7 +244,7 @@
         card.removeAttribute('tabindex');
         card.removeAttribute('title');
         const action = card.querySelector('.start');
-        if (action) action.textContent = completed.has(module.id) ? 'Review module →' : 'Open module →';
+        if (action) action.textContent = completed.has(module.id) ? 'Review Module →' : 'Open Module →';
       }
     });
   }
