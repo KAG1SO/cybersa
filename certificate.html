@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your CyberSA Certificate</title>
+<style>
+:root{--ink:#22213A;--muted:#6B6B85;--indigo:#4C5FD5;--line:#E4E2EE;--green:#247A57}*{box-sizing:border-box}body{margin:0;background:#FAF9FB;color:var(--ink);font:15px Arial,sans-serif}.top{padding:18px 5%;background:#fff;border-bottom:1px solid var(--line)}.top a{color:var(--indigo);font-weight:700;text-decoration:none}.wrap{max-width:680px;margin:70px auto;padding:0 20px}.card{padding:32px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 36px #22213A0D}.card h1{margin:0 0 10px;font-size:25px}.card p{color:var(--muted);line-height:1.7}.button{display:inline-block;margin-top:12px;padding:12px 17px;border:0;border-radius:8px;background:var(--indigo);color:#fff;font-weight:700;text-decoration:none;cursor:pointer}.button:disabled{opacity:.6;cursor:wait}.status{padding:12px 14px;border-radius:8px;background:#F5F4FF;color:var(--muted)}.status.error{background:#FFF4F2;color:#A52A22}.small{font-size:12px}
+</style>
+</head>
+<body>
+<header class="top"><a href="index.html">CyberSA Learn</a></header>
+<main class="wrap"><section class="card">
+  <h1>Your certificate</h1>
+  <p id="status" class="status" role="status" aria-live="polite">Checking your course completion...</p>
+  <button id="download" class="button" type="button" disabled>Download certificate PDF</button>
+  <p class="small">Your certificate unlocks after you pass all five module checks and the post-assessment.</p>
+</section></main>
+<script>
+const statusEl=document.getElementById('status');
+const button=document.getElementById('download');
+let certificateUrl='';
+async function prepareCertificate(){
+  const token=localStorage.getItem('cybersaAuthToken');
+  if(!token){statusEl.textContent='Please sign in to your learner record first.';statusEl.classList.add('error');return;}
+  try{
+    const response=await fetch('/api/certificate.pdf',{headers:{Authorization:`Bearer ${token}`}});
+    if(!response.ok){const data=await response.json().catch(()=>({}));throw new Error(data.detail||'Your certificate is not available yet.');}
+    const file=await response.blob();
+    certificateUrl=URL.createObjectURL(file);
+    const learner=await fetch('/api/me',{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():null).catch(()=>null);
+    const fileName=`CyberSA-Certificate-${learner?.participant_id||'Learner'}.pdf`;
+    button.onclick=()=>{const link=document.createElement('a');link.href=certificateUrl;link.download=fileName;document.body.appendChild(link);link.click();link.remove();};
+    button.disabled=false;statusEl.textContent='Congratulations! You have completed the course and passed the post-assessment.';statusEl.style.color='var(--green)';
+  }catch(error){statusEl.textContent=error.message;statusEl.classList.add('error');}
+}
+window.addEventListener('pagehide',()=>{if(certificateUrl)URL.revokeObjectURL(certificateUrl);});
+prepareCertificate();
+</script>
+</body>
+</html>

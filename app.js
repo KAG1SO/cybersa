@@ -191,6 +191,7 @@
       ['M4', 'Module 4'], ['M5', 'Module 5']
     ];
     const doneCount = completedModules.size + (postComplete ? 1 : 0);
+    const allModulesComplete = milestones.every(([id]) => completedModules.has(id));
     const nextIndex = milestones.findIndex(([id]) => !completedModules.has(id));
     const nextIsPost = nextIndex === -1 && !postComplete;
     const items = milestones.map(([id, title]) => {
@@ -203,7 +204,7 @@
     card.id = 'cs-home-progress';
     card.className = 'cs-home-progress';
     card.setAttribute('aria-label', 'Course progress');
-    card.innerHTML = `<div class="cs-home-progress-head"><h3>Your course progress</h3><span class="cs-home-progress-count">${doneCount} of 6 completed</span></div><div class="cs-home-progress-track" role="progressbar" aria-label="Course completion" aria-valuemin="0" aria-valuemax="6" aria-valuenow="${doneCount}"><div class="cs-home-progress-fill" style="width:${Math.round(doneCount / 6 * 100)}%"></div></div><div class="cs-home-progress-list">${items.join('')}</div>`;
+    card.innerHTML = `<div class="cs-home-progress-head"><h3>Your course progress</h3><span class="cs-home-progress-count">${doneCount} of 6 completed</span></div><div class="cs-home-progress-track" role="progressbar" aria-label="Course completion" aria-valuemin="0" aria-valuemax="6" aria-valuenow="${doneCount}"><div class="cs-home-progress-fill" style="width:${Math.round(doneCount / 6 * 100)}%"></div></div><div class="cs-home-progress-list">${items.join('')}</div>${allModulesComplete&&postComplete?'<a href="certificate.html" style="display:inline-block;margin-top:16px;padding:10px 14px;border-radius:8px;background:#4C5FD5;color:#fff;text-decoration:none;font-weight:700">Download your certificate</a>':''}`;
     host.insertAdjacentElement('afterend', card);
   }
 

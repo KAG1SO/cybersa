@@ -6,13 +6,16 @@ import io
 import os
 import secrets
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.colors import HexColor
+from reportlab.pdfgen import canvas
 
 BASE = Path(__file__).resolve().parent
 DB_PATH = BASE / "cybersa.db"
@@ -337,6 +340,55 @@ def learner_progress(authorization: str | None = Header(default=None)):
         "assessment_scores": {row["module_id"]: row["percentage"] for row in attempts},
         "post_assessment_scores": [row["percentage"] for row in post_attempts],
     }
+
+
+@app.get("/api/certificate.pdf")
+def learner_certificate(authorization: str | None = Header(default=None)):
+    learner = learner_from_token(authorization.removeprefix("Bearer ") if authorization else None)
+    con = db()
+    completed = {
+        row["module_id"] for row in con.execute(
+            "SELECT module_id FROM module_activity WHERE learner_id=? AND completed=1",
+            (learner["id"],),
+        ).fetchall()
+    }
+    post_pass = con.execute(
+        """SELECT submitted_at FROM attempts
+           WHERE learner_id=? AND module_id='POST' AND attempt_type='post_assessment'
+             AND percentage>=70
+           ORDER BY submitted_at DESC, id DESC LIMIT 1""",
+        (learner["id"],),
+    ).fetchone()
+    con.close()
+    if not set(MODULES).issubset(completed) or not post_pass:
+        raise HTTPException(403, "Complete and pass all five module checks and the post-assessment to earn your certificate.")
+
+    completed_at = datetime.fromisoformat(post_pass["submitted_at"]).astimezone(
+        timezone(timedelta(hours=2))
+    ).strftime("%d %B %Y").lstrip("0")
+    display_name = (learner["name"] or learner["participant_id"]).encode("cp1252", "replace").decode("cp1252")
+    participant_id = learner["participant_id"]
+    pdf = io.BytesIO()
+    page = landscape(A4)
+    doc = canvas.Canvas(pdf, pagesize=page)
+    width, height = page
+    doc.setFillColor(HexColor("#FAF9FB")); doc.rect(0, 0, width, height, fill=1, stroke=0)
+    doc.setStrokeColor(HexColor("#4C5FD5")); doc.setLineWidth(3); doc.roundRect(26, 26, width-52, height-52, 16, fill=0, stroke=1)
+    doc.setStrokeColor(HexColor("#DCD8F2")); doc.setLineWidth(1); doc.roundRect(36, 36, width-72, height-72, 12, fill=0, stroke=1)
+    doc.setFillColor(HexColor("#4C5FD5")); doc.setFont("Helvetica-Bold", 13); doc.drawCentredString(width/2, height-100, "CYBERSA LEARN")
+    doc.setFillColor(HexColor("#22213A")); doc.setFont("Helvetica-Bold", 30); doc.drawCentredString(width/2, height-158, "Certificate of Completion")
+    doc.setFillColor(HexColor("#6B6B85")); doc.setFont("Helvetica", 14); doc.drawCentredString(width/2, height-200, "This certificate is presented to")
+    name_font = 25
+    while name_font > 16 and doc.stringWidth(display_name, "Helvetica-Bold", name_font) > width-120:
+        name_font -= 1
+    doc.setFillColor(HexColor("#4C5FD5")); doc.setFont("Helvetica-Bold", name_font); doc.drawCentredString(width/2, height-247, display_name)
+    doc.setFillColor(HexColor("#6B6B85")); doc.setFont("Helvetica", 13)
+    doc.drawCentredString(width/2, height-286, "for completing all five CyberSA Learn modules and passing the post-assessment")
+    doc.setFillColor(HexColor("#22213A")); doc.setFont("Helvetica-Bold", 12); doc.drawCentredString(width/2, 105, f"Completed {completed_at}")
+    doc.setFillColor(HexColor("#6B6B85")); doc.setFont("Helvetica", 10); doc.drawCentredString(width/2, 82, f"Participant ID: {participant_id}")
+    doc.save()
+    pdf.seek(0)
+    return StreamingResponse(pdf, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="CyberSA-Certificate-{participant_id}.pdf"'})
 
 
 @app.post("/api/activity")
