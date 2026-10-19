@@ -198,6 +198,24 @@ def learner_from_token(token: str | None):
     return row
 
 
+def first_incomplete_module(learner_id: int, module_id: str):
+    module_ids = list(MODULES)
+    required = module_ids if module_id == "POST" else module_ids[:module_ids.index(module_id)]
+    if not required:
+        return None
+    con = db()
+    for required_id in required:
+        row = con.execute(
+            "SELECT completed FROM module_activity WHERE learner_id=? AND module_id=?",
+            (learner_id, required_id),
+        ).fetchone()
+        if not row or not row["completed"]:
+            con.close()
+            return required_id
+    con.close()
+    return None
+
+
 def researcher_guard(password: str | None):
     if not password or not secrets.compare_digest(password, RESEARCHER_PASSWORD):
         raise HTTPException(status_code=401, detail="Researcher authentication required")
@@ -326,6 +344,9 @@ def activity(payload: ActivityIn, authorization: str | None = Header(default=Non
     if x_module_id not in MODULES:
         raise HTTPException(400, "Unknown module")
     learner = learner_from_token(authorization.removeprefix("Bearer ") if authorization else None)
+    prerequisite = first_incomplete_module(learner["id"], x_module_id)
+    if prerequisite:
+        raise HTTPException(403, f"Pass Module {prerequisite.removeprefix('M')} before continuing.")
     progress = max(0, min(100, payload.progress))
     stamp = now()
     con = db()
@@ -348,6 +369,14 @@ def attempt(payload: AttemptIn, authorization: str | None = Header(default=None)
     if payload.module_id not in MODULES and payload.module_id != "POST":
         raise HTTPException(400, "Unknown module")
     learner = learner_from_token(authorization.removeprefix("Bearer ") if authorization else None)
+    if payload.module_id in MODULES:
+        prerequisite = first_incomplete_module(learner["id"], payload.module_id)
+        if prerequisite:
+            raise HTTPException(403, f"Pass Module {prerequisite.removeprefix('M')} before taking this knowledge check.")
+    if payload.module_id == "POST":
+        prerequisite = first_incomplete_module(learner["id"], "POST")
+        if prerequisite:
+            raise HTTPException(403, f"Pass Module {prerequisite.removeprefix('M')} before taking the post-assessment.")
     pct = payload.percentage
     if pct is None and payload.score is not None and payload.total:
         pct = round(payload.score / payload.total * 100)

@@ -10,6 +10,7 @@
     'module4.html': { id: 'M4', title: 'Safe Internet & Social Media Use' },
     'module5.html': { id: 'M5', title: 'Cyber Attack Awareness' }
   };
+  const MODULE_SEQUENCE = Object.entries(MODS);
   const page = location.pathname.split('/').pop() || 'index.html';
   const mod = MODS[page];
 
@@ -40,6 +41,7 @@
       .cs-user-menu{display:inline-flex;align-items:center;gap:10px}.cs-logout{border:1px solid #E4E2EE;background:#fff;color:#22213A;border-radius:7px;padding:7px 10px;font-size:11px;cursor:pointer}.cs-logout:hover{border-color:#C8C5E8;color:#4C5FD5}
       .topic-link.active{color:#2E9B6F!important}.topic-link.active .dot{background:#2E9B6F!important}
       .cs-home-progress{margin:0 0 20px;padding:20px 22px;border:1px solid #E4E2EE;border-radius:14px;background:#fff}.cs-home-progress-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.cs-home-progress h3{margin:0;color:#22213A;font-size:16px}.cs-home-progress-count{color:#4C5FD5;font-size:14px;font-weight:700;white-space:nowrap}.cs-home-progress-track{height:8px;margin:13px 0 15px;background:#EDEAFB;border-radius:99px;overflow:hidden}.cs-home-progress-fill{height:100%;background:#4C5FD5;border-radius:99px;transition:width .25s}.cs-home-progress-list{display:flex;flex-wrap:wrap;gap:8px}.cs-home-progress-item{padding:6px 10px;border:1px solid #E4E2EE;border-radius:999px;color:#6B6B85;font-size:11px}.cs-home-progress-item.done{background:#EAF7F1;border-color:#C8E5D8;color:#247A57}.cs-home-progress-item.next{border-color:#C8C5E8;color:#4C5FD5;font-weight:600}
+      .module-card.cs-module-locked{opacity:.62;cursor:not-allowed}.module-card.cs-module-locked:hover{transform:none;box-shadow:none;border-color:#E4E2EE}.cs-module-lock{padding:24px;border:1px solid #E4E2EE;border-radius:14px;background:#fff;color:#22213A}.cs-module-lock p{margin:10px 0 18px;color:#6B6B85;line-height:1.6}.cs-module-lock a{display:inline-block;margin-right:10px;padding:10px 14px;border-radius:8px;background:#4C5FD5;color:#fff;text-decoration:none;font-weight:600}.cs-module-lock a.secondary{background:#F5F4FF;color:#4C5FD5;border:1px solid #DCD8F2}
     `; document.head.appendChild(s);
   }
 
@@ -198,11 +200,61 @@
     host.insertAdjacentElement('afterend', card);
   }
 
+  function renderModuleAvailability(saved) {
+    const completed = new Set(saved.completed_modules || []);
+    document.querySelectorAll('.module-card[href^="module"]').forEach((card, index) => {
+      const [pageName, module] = MODULE_SEQUENCE[index] || [];
+      if (!pageName || !module) return;
+      const firstMissing = MODULE_SEQUENCE.slice(0, index).find(([, earlier]) => !completed.has(earlier.id));
+      const locked = Boolean(firstMissing);
+      card.classList.toggle('cs-module-locked', locked);
+      card.setAttribute('aria-disabled', String(locked));
+      if (locked) {
+        card.tabIndex = -1;
+        card.title = `Pass ${firstMissing[1].title} before opening this module.`;
+        const action = card.querySelector('.start');
+        if (action) action.textContent = `Locked · Pass ${firstMissing[1].id} first`;
+        if (!card.dataset.lockHandler) {
+          card.addEventListener('click', event => {
+            if (card.getAttribute('aria-disabled') === 'true') event.preventDefault();
+          });
+          card.dataset.lockHandler = 'true';
+        }
+      } else {
+        card.removeAttribute('tabindex');
+        card.removeAttribute('title');
+        const action = card.querySelector('.start');
+        if (action) action.textContent = completed.has(module.id) ? 'Review module →' : 'Open module →';
+      }
+    });
+  }
+
+  async function enforceModuleAccess() {
+    const index = MODULE_SEQUENCE.findIndex(([file]) => file === page);
+    if (index <= 0) return true;
+    try {
+      const saved = await api('/progress');
+      const completed = new Set(saved.completed_modules || []);
+      const firstMissing = MODULE_SEQUENCE.slice(0, index).find(([, earlier]) => !completed.has(earlier.id));
+      if (!firstMissing) return true;
+      const main = document.querySelector('.main');
+      if (main) {
+        const [requiredPage, requiredModule] = firstMissing;
+        main.innerHTML = `<section class="cs-module-lock" role="status"><h1>This module is locked</h1><p>Pass ${esc(requiredModule.title)} with at least 70% to unlock this module. You can retry that knowledge check as many times as you need.</p><a href="${requiredPage}">Return to ${esc(requiredModule.title)}</a><a class="secondary" href="index.html">Back to home</a></section>`;
+      }
+      return false;
+    } catch (e) {
+      console.error('Could not check module prerequisites', e);
+      location.href = 'index.html';
+      return false;
+    }
+  }
+
   async function showPostAssessmentIfReady(user) {
     if (!user) return;
     try {
       const saved = await api('/progress');
-      if (page === 'index.html') renderHomeProgress(saved);
+      if (page === 'index.html') { renderHomeProgress(saved); renderModuleAvailability(saved); }
       const scores = saved.assessment_scores || {};
       const allPassed = ['M1', 'M2', 'M3', 'M4', 'M5'].every(id => Number(scores[id]) >= 70);
       if (!allPassed) return;
@@ -299,7 +351,16 @@
     ensureStyles();
     if (page === 'index.html' || mod || page === 'post-assessment.html') {
       const user = await currentUser();
-      if (!user) showLogin(); else { renderUser(user); ensureRecoveryCode(); trackModule(user); if (mod) trackTopics(); if (page === 'index.html' || page === 'module5.html') showPostAssessmentIfReady(user); const timer=setInterval(()=>{if(patchQuiz()) clearInterval(timer)},100); }
+      if (!user) showLogin(); else {
+        renderUser(user); ensureRecoveryCode();
+        const canOpen = mod ? await enforceModuleAccess() : true;
+        if (canOpen) {
+          trackModule(user);
+          if (mod) trackTopics();
+          if (page === 'index.html' || page === 'module5.html') showPostAssessmentIfReady(user);
+          const timer=setInterval(()=>{if(patchQuiz()) clearInterval(timer)},100);
+        }
+      }
     }
     showResearcherError();
   }
