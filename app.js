@@ -47,10 +47,16 @@
     ensureStyles();
     if (document.getElementById('cs-modal')) return;
     const m = document.createElement('div'); m.id = 'cs-modal';
-    m.innerHTML = `<div class="box"><h2>Welcome to CyberSA Learn</h2><div id="cs-create-panel"><p>New here? Create a learner record. You’ll receive a participant ID and recovery code to save.</p><label for="cs-name">Full name</label><input id="cs-name" placeholder="Your name" autocomplete="name" required aria-describedby="cs-name-error"><p id="cs-name-error" role="alert" style="display:none;margin:7px 0 0;color:#B42318;font-size:12px">Please enter your name to create a learner record.</p><button id="cs-start">Create learner record</button><button type="button" class="cs-switch" id="cs-show-login">Returning learner? Sign in with your participant ID</button></div><div id="cs-login-panel" style="display:none"><p>Enter the participant ID and recovery code you saved earlier to continue your existing learner record.</p><label>Participant ID</label><input id="cs-participant-id" placeholder="CS-0001" autocomplete="username"><label>Recovery code</label><input id="cs-recovery-code" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="one-time-code"><button id="cs-login">Sign in</button><button type="button" class="cs-switch" id="cs-show-create">New learner? Create a learner record</button></div><p style="margin:20px 0 0;text-align:center"><a href="dashboard.html" style="color:#4C5FD5;font-size:13px;font-weight:600">Researcher sign in →</a></p></div>`;
+    m.innerHTML = `<div class="box"><h2>Welcome to CyberSA Learn</h2><div id="cs-create-panel"><p>New here? Create a learner record. You’ll receive a participant ID and recovery code to save.</p><label for="cs-name">Full name</label><input id="cs-name" placeholder="Your name" autocomplete="name" required aria-describedby="cs-name-error"><p id="cs-name-error" role="alert" style="display:none;margin:7px 0 0;color:#B42318;font-size:12px">Please enter your name to create a learner record.</p><button id="cs-start">Create learner record</button><button type="button" class="cs-switch" id="cs-show-login">Returning learner? Sign in with your participant ID</button></div><div id="cs-login-panel" style="display:none"><p>Enter the participant ID and recovery code you saved earlier to continue your existing learner record.</p><p id="cs-login-error" role="alert" aria-live="polite" style="display:none;margin:0 0 14px;padding:10px 12px;border:1px solid #F1B9B5;border-radius:8px;background:#FFF4F2;color:#A52A22;font-size:13px;line-height:1.5"></p><label for="cs-participant-id">Participant ID</label><input id="cs-participant-id" placeholder="CS-0001" autocomplete="username" aria-describedby="cs-login-error"><label for="cs-recovery-code">Recovery code</label><input id="cs-recovery-code" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="one-time-code" aria-describedby="cs-login-error"><button id="cs-login">Sign in</button><button type="button" class="cs-switch" id="cs-show-create">New learner? Create a learner record</button></div><p style="margin:20px 0 0;text-align:center"><a href="dashboard.html" style="color:#4C5FD5;font-size:13px;font-weight:600">Researcher sign in →</a></p></div>`;
     document.body.appendChild(m);
     document.getElementById('cs-show-login').onclick = () => { document.getElementById('cs-create-panel').style.display='none'; document.getElementById('cs-login-panel').style.display='block'; };
     document.getElementById('cs-show-create').onclick = () => { document.getElementById('cs-login-panel').style.display='none'; document.getElementById('cs-create-panel').style.display='block'; };
+    ['cs-participant-id', 'cs-recovery-code'].forEach(id => document.getElementById(id).addEventListener('input', () => {
+      const error = document.getElementById('cs-login-error');
+      error.style.display='none'; error.textContent='';
+      document.getElementById('cs-participant-id').removeAttribute('aria-invalid');
+      document.getElementById('cs-recovery-code').removeAttribute('aria-invalid');
+    }));
     document.getElementById('cs-name').addEventListener('input', () => {
       const field = document.getElementById('cs-name');
       const error = document.getElementById('cs-name-error');
@@ -74,7 +80,14 @@
       try {
         const user=await api('/learners/session',{method:'POST',body:JSON.stringify({participant_id:document.getElementById('cs-participant-id').value.trim(),recovery_code:document.getElementById('cs-recovery-code').value.trim()})});
         localStorage.setItem(TOKEN_KEY,user.token);localStorage.setItem(USER_KEY,user.participant_id);location.reload();
-      } catch(e) { button.disabled=false;button.textContent='Sign in';alert(e.message); }
+      } catch(e) {
+        button.disabled=false;button.textContent='Sign in';
+        const error=document.getElementById('cs-login-error');
+        error.textContent=e.message==='Participant ID or recovery code is incorrect' ? 'Participant ID or recovery code is incorrect. Check both and try again.' : e.message;
+        error.style.display='block';
+        document.getElementById('cs-participant-id').setAttribute('aria-invalid','true');
+        document.getElementById('cs-recovery-code').setAttribute('aria-invalid','true');
+      }
     };
   }
 
