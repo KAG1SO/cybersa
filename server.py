@@ -354,7 +354,7 @@ def learner_certificate(authorization: str | None = Header(default=None)):
     }
     post_pass = con.execute(
         """SELECT submitted_at FROM attempts
-           WHERE learner_id=? AND module_id='POST' AND attempt_type='post_assessment'
+           WHERE learner_id=? AND attempt_type='post_assessment'
              AND percentage>=70
            ORDER BY submitted_at DESC, id DESC LIMIT 1""",
         (learner["id"],),
@@ -421,11 +421,16 @@ def attempt(payload: AttemptIn, authorization: str | None = Header(default=None)
     if payload.module_id not in MODULES and payload.module_id != "POST":
         raise HTTPException(400, "Unknown module")
     learner = learner_from_token(authorization.removeprefix("Bearer ") if authorization else None)
-    if payload.module_id in MODULES:
+    is_post_assessment = payload.attempt_type == "post_assessment"
+    if is_post_assessment:
+        prerequisite = first_incomplete_module(learner["id"], "POST")
+        if prerequisite:
+            raise HTTPException(403, f"Pass Module {prerequisite.removeprefix('M')} before taking the post-assessment.")
+    elif payload.module_id in MODULES:
         prerequisite = first_incomplete_module(learner["id"], payload.module_id)
         if prerequisite:
             raise HTTPException(403, f"Pass Module {prerequisite.removeprefix('M')} before taking this knowledge check.")
-    if payload.module_id == "POST":
+    elif payload.module_id == "POST":
         prerequisite = first_incomplete_module(learner["id"], "POST")
         if prerequisite:
             raise HTTPException(403, f"Pass Module {prerequisite.removeprefix('M')} before taking the post-assessment.")
@@ -437,9 +442,9 @@ def attempt(payload: AttemptIn, authorization: str | None = Header(default=None)
     con = db()
     con.execute(
         "INSERT INTO attempts(learner_id,module_id,attempt_type,score,total,percentage,answers_json,submitted_at) VALUES(?,?,?,?,?,?,?,?)",
-        (learner["id"], payload.module_id, payload.attempt_type, payload.score, payload.total, pct, json.dumps(payload.answers), stamp),
+        (learner["id"], "POST" if is_post_assessment else payload.module_id, payload.attempt_type, payload.score, payload.total, pct, json.dumps(payload.answers), stamp),
     )
-    if payload.module_id in MODULES and payload.attempt_type != "post_assessment" and pct is not None and pct >= 70:
+    if payload.module_id in MODULES and not is_post_assessment and pct is not None and pct >= 70:
         con.execute(
             """INSERT INTO module_activity(learner_id,module_id,started_at,last_seen_at,progress,completed,completed_at)
                VALUES(?,?,?,?,100,1,?)
@@ -469,6 +474,9 @@ def research_data():
     learners = [dict(r) for r in con.execute("SELECT id,participant_id,name,created_at,last_seen_at FROM learners ORDER BY id").fetchall()]
     activities = [dict(r) for r in con.execute("SELECT * FROM module_activity").fetchall()]
     attempts = [dict(r) for r in con.execute("SELECT * FROM attempts ORDER BY submitted_at").fetchall()]
+    for attempt in attempts:
+        if attempt["attempt_type"] == "post_assessment":
+            attempt["module_id"] = "POST"
     feedback_rows = [dict(r) for r in con.execute("SELECT * FROM feedback ORDER BY submitted_at").fetchall()]
     con.close()
     return {"learners": learners, "activities": activities, "attempts": attempts, "feedback": feedback_rows}
