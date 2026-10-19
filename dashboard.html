@@ -16,7 +16,7 @@
 <main class="wrap">
   <header class="top">
     <div><div class="eyebrow">Private research workspace</div><div class="brand">CyberSA Research Dashboard</div><div class="subtitle">A quick view of learner progress, assessment results and feedback.</div></div>
-    <div class="actions"><a class="btn" href="index.html">Learner site</a><button class="btn primary" onclick="exportCSV()">Export CSV</button><button class="btn danger" onclick="clearData()">Clear all data</button></div>
+    <div class="actions"><a class="btn" href="index.html">Learner site</a><button class="btn primary" onclick="exportCSV()">Export CSV</button><button class="btn" onclick="exportFeedbackCSV()">Export feedback CSV</button><button class="btn danger" onclick="clearData()">Clear all data</button></div>
   </header>
   <section class="stats" id="stats" aria-label="Research summary"></section>
 
@@ -34,7 +34,7 @@
     <div class="feedback-list" id="feedback-list"></div>
   </section>
 
-  <p class="note">Learner names are optional, so some records appear as “Anonymous participant.” Participant IDs link each learner’s progress, assessment attempts and feedback. Use Export CSV to save a copy of the research data.</p>
+  <p class="note">Learner names are optional, so some records appear as “Anonymous participant.” Participant IDs link each learner’s progress, assessment attempts and feedback. Export CSV saves progress and assessment results. Export feedback CSV saves every feedback response.</p>
 </main>
 
 <script>
@@ -154,6 +154,7 @@ function showRecoveryIssueConfirmation(id,modal){
 }
 function showResearchRecoveryCode(id,code){const modal=document.createElement('div');modal.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(34,33,58,.35);display:grid;place-items:center;padding:20px';modal.innerHTML=`<div style="background:#fff;border:1px solid #E4E2EE;border-radius:14px;padding:24px;max-width:460px;width:100%;box-shadow:0 20px 60px #22213A33"><h2 style="margin:0 0 10px;font-size:20px">Replacement recovery code</h2><p style="color:#6B6B85;font-size:13px;line-height:1.6">Give this one-time code to <strong>${esc(id)}</strong> through a private channel. It will not be shown again.</p><input id="issued-recovery-code" readonly value="${esc(code)}" style="width:100%;padding:12px;border:1px solid #E4E2EE;border-radius:8px;font:700 17px monospace;letter-spacing:1px"><div class="actions" style="margin-top:14px"><button class="btn primary" id="copy-issued-code">Copy code</button><button class="btn" id="close-issued-code">Done</button></div></div>`;document.body.appendChild(modal);modal.querySelector('#copy-issued-code').onclick=async()=>{const field=modal.querySelector('#issued-recovery-code');try{await navigator.clipboard.writeText(code);modal.querySelector('#copy-issued-code').textContent='Copied';}catch{field.select();document.execCommand('copy');modal.querySelector('#copy-issued-code').textContent='Copied';}};modal.querySelector('#close-issued-code').onclick=()=>modal.remove();}
 async function exportCSV(){const r=await fetch('/api/research/export.csv',{headers:{'X-Researcher-Password':researchPassword}});if(!r.ok){alert('Could not export research data.');return;}const blob=await r.blob(),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cybersa-research-results.csv';a.click();URL.revokeObjectURL(a.href);}
+async function exportFeedbackCSV(){const r=await fetch('/api/research/feedback-export.csv',{headers:{'X-Researcher-Password':researchPassword}});if(!r.ok){alert('Could not export feedback responses.');return;}const blob=await r.blob(),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cybersa-feedback-responses.csv';a.click();URL.revokeObjectURL(a.href);}
 async function clearData(){if(!confirm('Delete all learner accounts, progress, assessment attempts and feedback? This cannot be undone.'))return;if(prompt('Type CLEAR to permanently remove all learner data.')!=='CLEAR')return;try{const r=await fetch('/api/research/clear-prototype',{method:'POST',headers:{'X-Researcher-Password':researchPassword}});if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.detail||'Could not clear learner data.');}alert('Learner data cleared.');const refresh=await fetch('/api/research/summary',{headers:{'X-Researcher-Password':researchPassword}});if(!refresh.ok)throw new Error('Data was cleared, but the dashboard could not refresh.');render(await refresh.json());}catch(e){alert(e.message);}}
 function researcherLogout(){researchPassword='';const input=document.querySelector('#researcher-password');if(input)input.value='';showResearcherLogin();}
 document.getElementById('participant-search').addEventListener('input',()=>currentData&&render(currentData));

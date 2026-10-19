@@ -459,6 +459,25 @@ def research_export(x_researcher_password: str | None = Header(default=None)):
     return StreamingResponse(iter([out.getvalue()]), media_type="text/csv", headers={"Content-Disposition":"attachment; filename=cybersa-research-results.csv"})
 
 
+@app.get("/api/research/feedback-export.csv")
+def research_feedback_export(x_researcher_password: str | None = Header(default=None)):
+    researcher_guard(x_researcher_password)
+    data = research_data()
+    names = {learner["id"]: learner for learner in data["learners"]}
+    titles = {**MODULES, "POST": "Course feedback"}
+    out = io.StringIO()
+    writer = csv.writer(out)
+    writer.writerow(["Participant", "Name", "Module", "Rating", "Comment", "Feedback Submitted"])
+    for feedback in data["feedback"]:
+        learner = names.get(feedback["learner_id"], {})
+        writer.writerow([
+            learner.get("participant_id", ""), learner.get("name", "") or "",
+            titles.get(feedback["module_id"], feedback["module_id"]), feedback["rating"],
+            feedback["comment"], feedback["submitted_at"],
+        ])
+    return StreamingResponse(iter([out.getvalue()]), media_type="text/csv", headers={"Content-Disposition":"attachment; filename=cybersa-feedback-responses.csv"})
+
+
 @app.post("/api/research/clear-prototype")
 def clear_prototype_data(x_researcher_password: str | None = Header(default=None)):
     researcher_guard(x_researcher_password)
