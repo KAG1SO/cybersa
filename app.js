@@ -143,9 +143,16 @@
       if (wrap.querySelector('.cs-logout')) return;
       const recovery = document.createElement('button'); recovery.className = 'cs-logout'; recovery.textContent = 'Replace recovery code';
       recovery.onclick = async () => {
-        if (!confirm(`Replace the recovery code for ${user.participant_id}? This keeps the same learner record and progress. The old code will stop working.`)) return;
-        try { const result=await api('/recovery-code/rotate',{method:'POST',body:'{}'}); showRecoveryCode(result.recovery_code); }
-        catch(e) { alert(e.message); }
+        const modal=document.createElement('div');modal.id='cs-recovery-confirm';
+        modal.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(34,33,58,.35);display:grid;place-items:center;padding:20px';
+        modal.innerHTML=`<div role="dialog" aria-modal="true" aria-labelledby="cs-recovery-confirm-title" style="background:#fff;border:1px solid #E4E2EE;border-radius:14px;padding:24px;max-width:460px;width:100%;box-shadow:0 20px 60px #22213A33"><h2 id="cs-recovery-confirm-title" style="margin:0 0 10px;font-size:20px">Replace recovery code?</h2><p style="color:#6B6B85;font-size:13px;line-height:1.6">This replaces the code for <strong>${esc(user.participant_id)}</strong>. The same learner record and progress stay in place. The old code will stop working.</p><p id="cs-recovery-confirm-error" role="alert" style="display:none;color:#B42318;font-size:12px"></p><div style="display:flex;gap:9px;justify-content:flex-end;margin-top:16px"><button class="cs-logout" id="cs-recovery-cancel" type="button">Cancel</button><button class="cs-logout" id="cs-recovery-confirm-button" type="button" style="background:#4C5FD5;color:#fff;border-color:#4C5FD5;font-weight:700">Replace code</button></div></div>`;
+        document.body.appendChild(modal);
+        modal.querySelector('#cs-recovery-cancel').onclick=()=>modal.remove();
+        modal.querySelector('#cs-recovery-confirm-button').onclick=async event=>{
+          const button=event.currentTarget,error=modal.querySelector('#cs-recovery-confirm-error');button.disabled=true;button.textContent='Replacing…';
+          try { const result=await api('/recovery-code/rotate',{method:'POST',body:'{}'});modal.remove();showRecoveryCode(result.recovery_code); }
+          catch(e) { error.textContent=e.message;error.style.display='block';button.disabled=false;button.textContent='Replace code'; }
+        };
       };
       const out = document.createElement('button'); out.className = 'cs-logout'; out.textContent = 'Log out';
       out.onclick = async () => {
